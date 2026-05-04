@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Exclude test classes from SpotBugs analysis -->
+    <Match>
+        <Class name="~.*Test"/>
+    </Match>
+    <Match>
+        <Class name="~.*Tests"/>
+    </Match>
+
+    <!-- Exclude Lombok-generated code -->
+    <Match>
+        <Package name="~.*generated.*"/>
+    </Match>
+
+    <!-- Exclude Spring Boot auto-configuration -->
+    <Match>
+        <Class name="~.*AutoConfiguration"/>
+    </Match>
+</FindBugsFilter>
