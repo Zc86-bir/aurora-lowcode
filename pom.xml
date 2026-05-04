@@ -970,6 +970,10 @@
                     <nohelp>true</nohelp>
                     <quiet>true</quiet>
                     <failOnError>false</failOnError>
+                    <doclint>none</doclint>
+                    <additionalOptions>
+                        --enable-preview
+                    </additionalOptions>
                 </configuration>
                 <executions>
                     <execution>
