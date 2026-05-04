@@ -40,13 +40,13 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Build with Maven
-        run: mvn -B clean compile -DskipTests
+        run: mvn -B clean compile -DskipTests -Dspringdoc.skip=true
 
       - name: Run Unit Tests (without coverage)
-        run: mvn -B test -DskipITs -Djacoco.skip=true
+        run: mvn -B test -DskipITs -Djacoco.skip=true -Dspringdoc.skip=true
 
       - name: Run Integration Tests
-        run: mvn -B verify -DskipUTs -Djacoco.skip=true
+        run: mvn -B verify -DskipUTs -Djacoco.skip=true -Dspringdoc.skip=true
 
       - name: Upload test results
         if: always()
@@ -77,7 +77,7 @@ jobs:
           cache: maven
 
       - name: Run SpotBugs
-        run: mvn -B com.github.spotbugs:spotbugs-maven-plugin:spotbugs -DskipTests
+        run: mvn -B com.github.spotbugs:spotbugs-maven-plugin:spotbugs -DskipTests -Dspringdoc.skip=true
 
       - name: Upload SpotBugs report
         if: always()
@@ -106,7 +106,7 @@ jobs:
           cache: maven
 
       - name: Run OWASP Dependency Check
-        run: mvn -B org.owasp:dependency-check-maven:check -DskipTests -DfailBuildOnCVSS=7
+        run: mvn -B org.owasp:dependency-check-maven:check -DskipTests -DfailBuildOnCVSS=7 -Dspringdoc.skip=true
 
       - name: Upload dependency check report
         if: always()
@@ -135,7 +135,7 @@ jobs:
           cache: maven
 
       - name: Run tests with coverage
-        run: mvn -B verify -DskipITs
+        run: mvn -B verify -DskipITs -Dspringdoc.skip=true
         # JaCoCo check goal is bound to 'verify' phase in pom.xml
         # with instruction coverage >= 0.80 and branch coverage >= 0.70
 
