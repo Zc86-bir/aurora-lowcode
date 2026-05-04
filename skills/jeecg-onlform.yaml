@@ -1,0 +1,85 @@
+skill_id: jeecg-onlform
+name: Jeecg Online Form Designer
+description: Generate Online Form configuration JSON compatible with JeecgBoot Online Form feature
+version: 1.0.0
+category: form_design
+executor: ai-pipeline
+author: aurora-team
+created_at: 2026-05-04T00:00:00Z
+updated_at: 2026-05-04T00:00:00Z
+deprecated: false
+aliases:
+  - table_designer
+jeecg_compat: true
+
+tags:
+  - jeecg
+  - onlform
+  - online
+  - form_design
+  - drag_drop
+  - configuration
+
+input_schema:
+  description:
+    type: string
+    required: true
+    description: Natural language description of the online form
+  tenant_id:
+    type: uuid
+    required: true
+  table_name:
+    type: string
+    required: true
+    description: Database table name the form operates on
+  form_type:
+    type: string
+    required: false
+    default: single
+    enum: [single, sub_table, tree]
+  fields:
+    type: array
+    required: false
+    description: Field configurations (field_name, component_type, label, width, required)
+  layout_config:
+    type: object
+    required: false
+    properties:
+      columns: { type: number, default: 1 }
+      label_width: { type: number, default: 120 }
+      show_reset: { type: boolean, default: true }
+      show_submit: { type: boolean, default: true }
+
+output_schema:
+  form_config_id:
+    type: uuid
+    required: true
+  form_json:
+    type: object
+    required: true
+    description: JeecgBoot Online Form compatible JSON configuration
+  table_config:
+    type: object
+    required: true
+  button_config:
+    type: array
+    required: true
+  validation_config:
+    type: object
+    required: true
+  checksum:
+    type: string
+    required: true
+
+business_rules:
+  - "Form configuration must be valid JeecgBoot Online Form JSON schema"
+  - "Field types must map to valid JeecgBoot component types"
+  - "Table columns must match database schema"
+  - "Sub-table forms must have valid foreign key relationships"
+  - "Form must support JeecgBoot CRUD operations"
+
+security_rules:
+  - "No SQL injection in field queries"
+  - "Form permissions enforced by tenant isolation"
+  - "Field-level permissions checked on submit"
+  - "Audit log entry created for form configuration changes"

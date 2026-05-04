@@ -19,6 +19,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SkillDefinitionLoader {
 
     private final ConcurrentHashMap<String, SkillDefinition> cache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, String> aliasToSkillId = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, java.util.Set<String>> skillIdToAliases = new ConcurrentHashMap<>();
     private final Path skillsDirectory;
 
     public SkillDefinitionLoader(Path skillsDirectory) {
@@ -42,6 +44,17 @@ public class SkillDefinitionLoader {
                 .map(Optional::get)
                 .forEach(def -> {
                     cache.put(def.skillId(), def);
+                    // Register aliases for routing
+                    java.util.Set<String> aliasSet = ConcurrentHashMap.newKeySet();
+                    for (String alias : def.aliases()) {
+                        String existing = aliasToSkillId.putIfAbsent(alias, def.skillId());
+                        if (existing != null) {
+                            System.err.println("WARNING: Duplicate alias '" + alias + "' - '" + def.skillId() + "' overwrites '" + existing + "'");
+                            aliasToSkillId.put(alias, def.skillId());
+                        }
+                        aliasSet.add(alias);
+                    }
+                    skillIdToAliases.put(def.skillId(), aliasSet);
                     definitions.add(def);
                 });
         }
@@ -50,14 +63,22 @@ public class SkillDefinitionLoader {
     }
 
     /**
-     * Load a single skill definition by ID.
+     * Load a single skill definition by ID (supports alias routing).
      */
     public Optional<SkillDefinition> loadById(String skillId) {
+        // Try direct lookup first
         SkillDefinition cached = cache.get(skillId);
         if (cached != null) {
             return Optional.of(cached);
         }
 
+        // Try alias resolution
+        String resolvedId = aliasToSkillId.get(skillId);
+        if (resolvedId != null) {
+            return Optional.ofNullable(cache.get(resolvedId));
+        }
+
+        // Try loading from file
         Path yamlFile = skillsDirectory.resolve(skillId + ".yaml");
         if (!Files.exists(yamlFile)) {
             yamlFile = skillsDirectory.resolve(skillId + ".yml");
@@ -71,6 +92,7 @@ public class SkillDefinitionLoader {
 
     /**
      * Reload a skill definition from file (hot-reload).
+     * Re-registers aliases on reload.
      */
     public Optional<SkillDefinition> reload(String skillId) throws IOException {
         Path yamlFile = skillsDirectory.resolve(skillId + ".yaml");
@@ -78,12 +100,44 @@ public class SkillDefinitionLoader {
             yamlFile = skillsDirectory.resolve(skillId + ".yml");
         }
         if (!Files.exists(yamlFile)) {
+            // Remove old aliases for this skill using reverse index
+            java.util.Set<String> oldAliases = skillIdToAliases.remove(skillId);
+            if (oldAliases != null) {
+                for (String alias : oldAliases) {
+                    aliasToSkillId.remove(alias);
+                }
+            }
             cache.remove(skillId);
             return Optional.empty();
         }
 
         Optional<SkillDefinition> result = loadFromFile(yamlFile);
-        result.ifPresent(def -> cache.put(skillId, def));
+        result.ifPresent(def -> {
+            // Remove old aliases
+            SkillDefinition old = cache.get(skillId);
+            if (old != null) {
+                for (String alias : old.aliases()) {
+                    aliasToSkillId.remove(alias);
+                }
+            }
+            // Register new aliases with duplicate detection
+            skillIdToAliases.compute(skillId, (k, oldSet) -> {
+                if (oldSet != null) {
+                    for (String alias : oldSet) aliasToSkillId.remove(alias);
+                }
+                java.util.Set<String> newSet = ConcurrentHashMap.newKeySet();
+                for (String alias : def.aliases()) {
+                    String existing = aliasToSkillId.putIfAbsent(alias, def.skillId());
+                    if (existing != null) {
+                        System.err.println("WARNING: Duplicate alias '" + alias + "' - '" + def.skillId() + "' overwrites '" + existing + "'");
+                        aliasToSkillId.put(alias, def.skillId());
+                    }
+                    newSet.add(alias);
+                }
+                return newSet;
+            });
+            cache.put(def.skillId(), def);
+        });
         return result;
     }
 
@@ -95,24 +149,50 @@ public class SkillDefinitionLoader {
     }
 
     /**
-     * Check if a skill is registered.
+     * Check if a skill is registered (by ID or alias).
      */
     public boolean isRegistered(String skillId) {
-        return cache.containsKey(skillId);
+        return cache.containsKey(skillId) || aliasToSkillId.containsKey(skillId);
     }
 
     /**
-     * Get all registered skill IDs.
+     * Resolve an alias to its canonical skill ID.
+     * Returns the original ID if not an alias.
+     */
+    public String resolveAlias(String skillId) {
+        return aliasToSkillId.getOrDefault(skillId, skillId);
+    }
+
+    /**
+     * Get all registered skill IDs (canonical only, not aliases).
      */
     public List<String> getRegisteredIds() {
         return List.copyOf(cache.keySet());
     }
 
     /**
-     * Clear all cached definitions.
+     * Get all registered aliases mapped to their canonical IDs.
+     */
+    public Map<String, String> getAllAliases() {
+        return Map.copyOf(aliasToSkillId);
+    }
+
+    /**
+     * Get all JeecgBoot compatible skills.
+     */
+    public List<SkillDefinition> getJeecgCompatSkills() {
+        return cache.values().stream()
+            .filter(def -> def.jeecgCompat())
+            .toList();
+    }
+
+    /**
+     * Clear all cached definitions and aliases.
      */
     public void clearCache() {
         cache.clear();
+        aliasToSkillId.clear();
+        skillIdToAliases.clear();
     }
 
     /**
@@ -146,6 +226,8 @@ public class SkillDefinitionLoader {
         List<String> tags = toStringList(raw.get("tags"));
         List<String> businessRules = toStringList(raw.get("business_rules"));
         List<String> securityRules = toStringList(raw.get("security_rules"));
+        List<String> aliases = toStringList(raw.get("aliases"));
+        boolean jeecgCompat = getBoolean(raw, "jeecg_compat");
 
         return new SkillDefinition(
             getString(raw, "skill_id"),
@@ -162,7 +244,9 @@ public class SkillDefinitionLoader {
             inputSchema,
             outputSchema,
             businessRules,
-            securityRules
+            securityRules,
+            aliases,
+            jeecgCompat
         );
     }
 
@@ -475,7 +559,9 @@ public class SkillDefinitionLoader {
         Map<String, Object> inputSchema,
         Map<String, Object> outputSchema,
         List<String> businessRules,
-        List<String> securityRules
+        List<String> securityRules,
+        List<String> aliases,
+        boolean jeecgCompat
     ) {
         /**
          * Check if this skill is compatible with the given version.

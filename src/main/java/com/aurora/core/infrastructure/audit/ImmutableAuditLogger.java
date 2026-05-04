@@ -48,8 +48,10 @@ public class ImmutableAuditLogger {
 
     /**
      * Append an audit entry to the hash chain.
+     * Synchronized to prevent race conditions under concurrent access —
+     * the read-compute-write of chainTipHash must be atomic.
      */
-    public AuditChainEntry append(AuditEntry entry) {
+    public synchronized AuditChainEntry append(AuditEntry entry) {
         String prevHash = chainTipHash;
         String contentHash = computeEntryHash(prevHash, entry);
 
@@ -118,6 +120,22 @@ public class ImmutableAuditLogger {
     }
 
     /**
+     * Test hook: inject a tampered entry at the given index.
+     * Used by tests to verify chain integrity detection.
+     */
+    public void injectTamperedEntry(int index, AuditChainEntry tamperedEntry) {
+        if (index < 0 || index >= chain.size()) {
+            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + chain.size());
+        }
+        // Convert to array, replace, recreate queue
+        AuditChainEntry[] entries = chain.toArray(new AuditChainEntry[0]);
+        chain.clear();
+        for (int i = 0; i < entries.length; i++) {
+            chain.add(i == index ? tamperedEntry : entries[i]);
+        }
+    }
+
+    /**
      * Export audit chain as verification report.
      */
     public ExportResult export(Instant from, Instant to) {
@@ -164,7 +182,8 @@ public class ImmutableAuditLogger {
                 + entry.resourceType()
                 + entry.resourceId()
                 + entry.timestamp()
-                + entry.details();
+                + entry.details()
+                + entry.traceId();
             byte[] hash = md.digest(content.getBytes(StandardCharsets.UTF_8));
             StringBuilder sb = new StringBuilder();
             for (byte b : hash) sb.append(String.format("%02x", b));
@@ -198,7 +217,8 @@ public class ImmutableAuditLogger {
         String resourceType,
         String resourceId,
         String details,
-        Instant timestamp
+        Instant timestamp,
+        String traceId
     ) {}
 
     public record AuditChainEntry(

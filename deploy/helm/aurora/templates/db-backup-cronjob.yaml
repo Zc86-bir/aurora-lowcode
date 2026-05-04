@@ -1,0 +1,131 @@
+# K8s CronJob: PostgreSQL Backup to MinIO
+# Runs daily at 2:00 AM UTC, dumps all databases, uploads to MinIO
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "aurora.fullname" . }}-db-backup
+  labels:
+    {{- include "aurora.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backup
+spec:
+  schedule: {{ .Values.backup.schedule | default "0 2 * * *" | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: {{ .Values.backup.historyLimit | default 7 }}
+  failedJobsHistoryLimit: {{ .Values.backup.failedHistoryLimit | default 3 }}
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: {{ .Values.backup.activeDeadlineSeconds | default 3600 }}
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            {{- include "aurora.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: backup
+        spec:
+          restartPolicy: OnFailure
+          {{- if .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml .Values.imagePullSecrets | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: pg-backup
+              image: {{ .Values.backup.image.repository }}:{{ .Values.backup.image.tag }}
+              imagePullPolicy: {{ .Values.backup.image.pullPolicy }}
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  set -euo pipefail
+
+                  # Install MinIO client if not present
+                  if ! command -v mc &> /dev/null; then
+                    echo "Installing MinIO client..."
+                    curl -sSL https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc
+                    chmod +x /usr/local/bin/mc
+                  fi
+
+                  TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+                  BACKUP_FILE="aurora-backup-${TIMESTAMP}.sql.gz"
+                  BACKUP_DIR="/tmp/backups"
+                  mkdir -p "$BACKUP_DIR"
+
+                  echo "Starting PostgreSQL backup at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+                  # Dump database
+                  pg_dump \
+                    -h ${PG_HOST} \
+                    -p ${PG_PORT} \
+                    -U ${PG_USER} \
+                    -d ${PG_DATABASE} \
+                    --format=custom \
+                    --compress=9 \
+                    --verbose \
+                    --no-owner \
+                    --no-privileges \
+                    -f "${BACKUP_DIR}/${BACKUP_FILE}"
+
+                  BACKUP_SIZE=$(du -h "${BACKUP_DIR}/${BACKUP_FILE}" | cut -f1)
+                  echo "Backup completed: ${BACKUP_FILE} (${BACKUP_SIZE})"
+
+                  # Upload to MinIO
+                  echo "Uploading to MinIO..."
+                  mc alias set minio "${MINIO_ENDPOINT}" "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}"
+                  mc mb --ignore-existing "minio/${MINIO_BUCKET}"
+                  mc cp "${BACKUP_DIR}/${BACKUP_FILE}" "minio/${MINIO_BUCKET}/${BACKUP_FILE}"
+                  echo "Upload complete: minio://${MINIO_BUCKET}/${BACKUP_FILE}"
+
+                  # Cleanup old local backups (keep last 3)
+                  ls -t "${BACKUP_DIR}"/aurora-backup-*.sql.gz 2>/dev/null | tail -n +4 | xargs -r rm
+                  echo "Local cleanup done"
+
+                  # Cleanup old remote backups (keep last 30)
+                  mc ls "minio/${MINIO_BUCKET}/" | grep "aurora-backup" | head -n -30 | \
+                    awk '{print $NF}' | while read -r old_file; do
+                      mc rm "minio/${MINIO_BUCKET}/${old_file}"
+                      echo "Deleted old backup: ${old_file}"
+                    done
+                  echo "Remote cleanup done"
+
+                  echo "Backup finished at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+              env:
+                - name: PG_HOST
+                  value: {{ .Values.database.host | quote }}
+                - name: PG_PORT
+                  value: {{ .Values.database.port | quote }}
+                - name: PG_DATABASE
+                  value: {{ .Values.database.name | quote }}
+                - name: PG_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.database.existingSecret | default (include "aurora.fullname" .) }}
+                      key: {{ .Values.database.existingSecretUsernameKey | default "username" }}
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.database.existingSecret | default (include "aurora.fullname" .) }}
+                      key: {{ .Values.database.existingSecretPasswordKey | default "password" }}
+                - name: MINIO_ENDPOINT
+                  value: {{ .Values.backup.minio.endpoint | default "http://aurora-minio:9000" | quote }}
+                - name: MINIO_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "aurora.fullname" . }}
+                      key: minio-access-key
+                      optional: true
+                - name: MINIO_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "aurora.fullname" . }}
+                      key: minio-secret-key
+                      optional: true
+                - name: MINIO_BUCKET
+                  value: {{ .Values.backup.minio.bucket | default "aurora-backups" | quote }}
+              resources:
+                {{- toYaml .Values.backup.resources | nindent 16 }}
+              volumeMounts:
+                - name: backup-temp
+                  mountPath: /tmp/backups
+          volumes:
+            - name: backup-temp
+              emptyDir:
+                sizeLimit: 5Gi

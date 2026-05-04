@@ -1,0 +1,87 @@
+skill_id: jimubi-bigscreen
+name: JimuBI Big Screen Designer
+description: Generate JimuBI big screen (data visualization wall) configurations with real-time data and animations
+version: 1.0.0
+category: bigscreen_design
+executor: ai-pipeline
+author: aurora-team
+created_at: 2026-05-04T00:00:00Z
+updated_at: 2026-05-04T00:00:00Z
+deprecated: false
+jeecg_compat: true
+
+tags:
+  - jimubi
+  - bigscreen
+  - data_visualization
+  - realtime
+  - animation
+  - wall
+
+input_schema:
+  description:
+    type: string
+    required: true
+    description: Natural language description of the big screen requirements
+  tenant_id:
+    type: uuid
+    required: true
+  screen_name:
+    type: string
+    required: false
+    description: Big screen name (auto-derived if omitted)
+  resolution:
+    type: object
+    required: false
+    properties:
+      width: { type: number, default: 1920 }
+      height: { type: number, default: 1080 }
+  theme:
+    type: string
+    required: false
+    default: dark
+    enum: [dark, light, custom]
+  components:
+    type: array
+    required: false
+    description: Component definitions (type, title, data_source, animation, position, size)
+  data_refresh:
+    type: object
+    required: false
+    properties:
+      mode: { type: string, enum: [polling, websocket, sse], default: polling }
+      interval: { type: number, default: 5 }
+
+output_schema:
+  bigscreen_id:
+    type: uuid
+    required: true
+  bigscreen_json:
+    type: object
+    required: true
+    description: JimuBI compatible big screen configuration JSON
+  component_configs:
+    type: array
+    required: true
+  data_streams:
+    type: array
+    required: true
+  animation_configs:
+    type: array
+    required: true
+  checksum:
+    type: string
+    required: true
+
+business_rules:
+  - "Big screen JSON must be valid JimuBI schema"
+  - "Component types must be supported by JimuBI big screen engine"
+  - "Resolution must be valid display aspect ratio"
+  - "Data refresh mode must be compatible with data source"
+  - "Animations must not exceed performance budget"
+
+security_rules:
+  - "Data stream sources validated against injection"
+  - "Big screen data scoped to tenant permissions"
+  - "Public display mode requires explicit sharing"
+  - "Audit log entry created for big screen changes"

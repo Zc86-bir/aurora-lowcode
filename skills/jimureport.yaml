@@ -1,0 +1,99 @@
+skill_id: jimureport
+name: JimuReport Compatible Report Builder
+description: Generate JimuReport (积木报表) compatible report templates with pagination, grouping, and export support
+version: 1.0.0
+category: report_design
+executor: ai-pipeline
+author: aurora-team
+created_at: 2026-05-04T00:00:00Z
+updated_at: 2026-05-04T00:00:00Z
+deprecated: false
+jeecg_compat: true
+
+tags:
+  - jimureport
+  - report
+  - template
+  - pagination
+  - grouping
+  - export
+  - print
+
+input_schema:
+  description:
+    type: string
+    required: true
+    description: Natural language description of the report requirements
+  tenant_id:
+    type: uuid
+    required: true
+  report_name:
+    type: string
+    required: false
+    description: Report name (auto-derived if omitted)
+  data_source:
+    type: string
+    required: true
+    description: SQL query for report data
+  report_type:
+    type: string
+    required: false
+    default: table
+    enum: [table, grouped, cross, chart, card]
+  layout:
+    type: object
+    required: false
+    properties:
+      orientation: { type: string, enum: [portrait, landscape], default: portrait }
+      paper_size: { type: string, default: A4 }
+      margin_top: { type: number, default: 20 }
+      margin_bottom: { type: number, default: 20 }
+      margin_left: { type: number, default: 15 }
+      margin_right: { type: number, default: 15 }
+  pagination:
+    type: boolean
+    required: false
+    default: true
+  export_formats:
+    type: array
+    required: false
+    default: [excel, pdf, word]
+
+output_schema:
+  report_id:
+    type: uuid
+    required: true
+  report_json:
+    type: object
+    required: true
+    description: JimuReport compatible report template JSON
+  sql_query:
+    type: string
+    required: true
+  column_definitions:
+    type: array
+    required: true
+  group_definitions:
+    type: array
+    required: false
+  header_footer:
+    type: object
+    required: true
+  checksum:
+    type: string
+    required: true
+
+business_rules:
+  - "Report JSON must be valid JimuReport template schema"
+  - "SQL query must be parameterized (no concatenation)"
+  - "Column types must map to JimuReport display types"
+  - "Grouping levels limited to 3 for performance"
+  - "Report must include tenant_id filter"
+  - "Pagination enabled by default for large datasets"
+
+security_rules:
+  - "SQL validated against injection patterns"
+  - "Report data scoped to tenant permissions"
+  - "Export limited to authorized data volume"
+  - "No sensitive data in report template"
+  - "Audit log entry created for report generation"

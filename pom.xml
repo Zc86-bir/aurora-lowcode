@@ -142,7 +142,7 @@
         <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
         <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
         <spotbugs-maven-plugin.version>4.8.6.6</spotbugs-maven-plugin.version>
-        <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
+        <jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
 
         <!-- Skip Flags -->
         <skipTests>false</skipTests>
@@ -535,12 +535,6 @@
         <!-- ================== -->
         <!-- Documentation      -->
         <!-- ================== -->
-
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>${springdoc.version}</version>
-        </dependency>
 
         <!-- ================== -->
         <!-- Testing            -->
@@ -981,7 +975,6 @@
                     <nohelp>true</nohelp>
                     <quiet>true</quiet>
                     <failOnError>false</failOnError>
-                    <additionalOptions>--enable-preview</additionalOptions>
                 </configuration>
                 <executions>
                     <execution>

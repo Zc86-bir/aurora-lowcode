@@ -1,0 +1,83 @@
+skill_id: jeecg-desform
+name: Jeecg Designer Form JSON Generator
+description: Generate form JSON for JeecgBoot DesForm (designer form) with drag-and-drop layout support
+version: 1.0.0
+category: form_design
+executor: ai-pipeline
+author: aurora-team
+created_at: 2026-05-04T00:00:00Z
+updated_at: 2026-05-04T00:00:00Z
+deprecated: false
+jeecg_compat: true
+
+tags:
+  - jeecg
+  - desform
+  - designer
+  - form_json
+  - drag_drop
+  - layout
+
+input_schema:
+  description:
+    type: string
+    required: true
+    description: Natural language description of the designer form
+  tenant_id:
+    type: uuid
+    required: true
+  form_name:
+    type: string
+    required: false
+    description: Form display name (auto-derived if omitted)
+  layout_type:
+    type: string
+    required: false
+    default: vertical
+    enum: [vertical, horizontal, grid, tabs, wizard]
+  components:
+    type: array
+    required: false
+    description: Component definitions (type, field, label, props, rules)
+  button_config:
+    type: object
+    required: false
+    properties:
+      show_submit: { type: boolean, default: true }
+      show_cancel: { type: boolean, default: true }
+      submit_text: { type: string, default: "提交" }
+      cancel_text: { type: string, default: "取消" }
+
+output_schema:
+  desform_id:
+    type: uuid
+    required: true
+  form_json:
+    type: object
+    required: true
+    description: JeecgBoot DesForm compatible JSON schema
+  component_tree:
+    type: array
+    required: true
+  validation_rules:
+    type: array
+    required: true
+  layout_config:
+    type: object
+    required: true
+  checksum:
+    type: string
+    required: true
+
+business_rules:
+  - "Form JSON must be valid JeecgBoot DesForm schema"
+  - "Component types must map to valid DesForm components"
+  - "Layout must support responsive design"
+  - "Validation rules must use DesForm rule format"
+  - "Form must be renderable by DesForm engine"
+
+security_rules:
+  - "No XSS in component labels and placeholders"
+  - "Form scoped to tenant permissions"
+  - "Component data sources validated"
+  - "Audit log entry created for form generation"

@@ -1,0 +1,100 @@
+server:
+  http_listen_port: 9080
+
+positions:
+  filename: /run/promtail/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+    tenant_id: aurora-lowcode
+
+scrape_configs:
+  # Docker container logs
+  - job_name: docker
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker
+          __path__: /var/lib/docker/containers/*/*-json.log
+
+  # Kubernetes pod logs (when running in K8s)
+  - job_name: kubernetes-pods
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+        target_label: app
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+      - action: replace
+        source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+        target_label: component
+        replacement: $1
+
+  # Aurora application logs
+  - job_name: aurora-app
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: aurora-lowcode
+          component: application
+          __path__: /var/log/aurora/*.log
+
+  # Nginx access logs
+  - job_name: nginx-access
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: nginx
+          component: access
+          __path__: /var/log/nginx/access.log
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<remote_addr>[\w\.]+) .* "(?P<method>\w+) (?P<request_uri>\S+) .* (?P<status>\d{3}) (?P<body_bytes_sent>\d+)'
+      - labels:
+          method:
+          request_uri:
+          status:
+
+  # Nginx error logs
+  - job_name: nginx-error
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: nginx
+          component: error
+          __path__: /var/log/nginx/error.log
+
+# Stages to extract traceId from log lines and add as label
+# This enables Logs -> Traces correlation in Grafana
+scrape_configs:
+  - job_name: aurora-with-trace
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: aurora-lowcode
+          __path__: /var/log/aurora/*.log
+    pipeline_stages:
+      # Extract traceId from SLF4J MDC format
+      - regex:
+          expression: '.*traceId=(?P<traceId>[a-f0-9]+).*spanId=(?P<spanId>[a-f0-9]+).*'
+      - labels:
+          traceId:
+          spanId:
+      # Extract tenantId from structured log
+      - regex:
+          expression: '.*tenantId=(?P<tenantId>[0-9a-f-]+).*'
+      - labels:
+          tenantId:
+      # Extract log level
+      - regex:
+          expression: '.*\s+(?P<level>TRACE|DEBUG|INFO|WARN|ERROR)\s+.*'
+      - labels:
+          level:

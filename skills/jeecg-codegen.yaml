@@ -1,0 +1,99 @@
+skill_id: jeecg-codegen
+name: Jeecg Code Generator
+description: Generate entity, controller, service, mapper code and DDL SQL from natural language descriptions with JeecgBoot compatibility
+version: 1.0.0
+category: code_generation
+executor: ai-pipeline
+author: aurora-team
+created_at: 2026-05-04T00:00:00Z
+updated_at: 2026-05-04T00:00:00Z
+deprecated: false
+aliases:
+  - form_generator
+  - skill_form_generator
+jeecg_compat: true
+
+tags:
+  - jeecg
+  - codegen
+  - entity
+  - controller
+  - service
+  - mapper
+  - ddl
+  - sql
+
+input_schema:
+  description:
+    type: string
+    required: true
+    description: Natural language description of the entity and required operations
+  tenant_id:
+    type: uuid
+    required: true
+  table_name:
+    type: string
+    required: false
+    description: Target database table name (auto-derived from description if omitted)
+  fields:
+    type: array
+    required: false
+    description: Explicit field definitions (name, type, label, required, searchable)
+  generate_options:
+    type: object
+    required: false
+    properties:
+      generate_controller: { type: boolean, default: true }
+      generate_service: { type: boolean, default: true }
+      generate_mapper: { type: boolean, default: true }
+      generate_entity: { type: boolean, default: true }
+      generate_ddl: { type: boolean, default: true }
+      generate_vue: { type: boolean, default: false }
+      pagination: { type: boolean, default: true }
+  db_type:
+    type: string
+    required: false
+    default: postgresql
+    enum: [postgresql, mysql]
+
+output_schema:
+  codegen_id:
+    type: uuid
+    required: true
+  entity_code:
+    type: string
+    required: true
+    description: Java entity source code
+  controller_code:
+    type: string
+    required: false
+  service_code:
+    type: string
+    required: false
+  mapper_code:
+    type: string
+    required: false
+  ddl_sql:
+    type: string
+    required: false
+  vue_code:
+    type: string
+    required: false
+  checksum:
+    type: string
+    required: true
+
+business_rules:
+  - "Entity class name must follow Java naming conventions (PascalCase)"
+  - "Table name must follow JeecgBoot convention (snake_case with demo prefix optional)"
+  - "All entities must have id, createBy, createName, createTime, updateBy, updateTime fields"
+  - "Generated DDL must include tenant_id for multi-tenancy"
+  - "Controller must extend JeecgBoot base controller pattern"
+  - "Generated code must compile with Java 25"
+
+security_rules:
+  - "No SQL injection patterns in generated code"
+  - "No XSS vectors in generated labels or descriptions"
+  - "Entity fields must have @TableField annotations for MyBatis-Plus"
+  - "Controller endpoints must have @RequiresPermissions annotations"
+  - "Audit log entry created for code generation events"

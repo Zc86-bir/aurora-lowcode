@@ -1,0 +1,288 @@
+# Aurora Low-Code Platform — Helm Values
+# Override with: helm install aurora ./deploy/helm/aurora -f custom-values.yaml
+
+# ===========================
+# Application
+# ===========================
+replicaCount: 2
+
+image:
+  repository: aurora-lowcode
+  pullPolicy: IfNotPresent
+  tag: "1.0.0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# ===========================
+# Service
+# ===========================
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+# ===========================
+# Ingress (with CDN caching annotations)
+# ===========================
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Nginx Ingress Controller caching annotations
+    nginx.ingress.kubernetes.io/proxy-cache-bypass: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      # HTML entry point — NO cache
+      if ($uri = "/index.html" || $uri = "/") {
+        add_header Cache-Control "no-cache, no-store, must-revalidate, max-age=0" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+      }
+      # Static assets with hash — IMMUTABLE cache (365 days)
+      if ($uri ~ "^/assets/") {
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        expires 365d;
+        access_log off;
+      }
+  hosts:
+    - host: aurora.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: aurora-tls
+      hosts:
+        - aurora.example.com
+
+# ===========================
+# Resources
+# ===========================
+resources:
+  limits:
+    cpu: 4000m
+    memory: 2Gi
+  requests:
+    cpu: 1000m
+    memory: 512Mi
+
+# ===========================
+# Autoscaling (HPA)
+# ===========================
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# ===========================
+# Probes
+# ===========================
+livenessProbe:
+  httpGet:
+    path: /actuator/health
+    port: 8080
+  initialDelaySeconds: 60
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# ===========================
+# Deployment
+# ===========================
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+podAnnotations: {}
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# ===========================
+# Environment Variables
+# ===========================
+env:
+  SPRING_PROFILES_ACTIVE: prod
+  DATABASE_HOST: aurora-postgres
+  DATABASE_PORT: 5432
+  DATABASE_NAME: aurora
+  REDIS_HOST: aurora-redis
+  REDIS_PORT: 6379
+  HIKARI_MAX_POOL: "20"
+  HIKARI_MIN_IDLE: "5"
+  JAVA_OPTS: >-
+    -XX:+UseZGC -XX:+ZGenerational
+    -Xms256m -Xmx1024m
+    -Djava.security.egd=file:/dev/./urandom
+    -Duser.timezone=UTC -Dfile.encoding=UTF-8
+    -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0
+
+# ===========================
+# JWT Secret (MUST override in production!)
+# ===========================
+jwtSecret: ""
+
+# ===========================
+# MinIO (S3-compatible storage for backups)
+# ===========================
+minio:
+  accessKey: "minioadmin"
+  secretKey: ""  # MUST override in production
+
+# ===========================
+# External Database (optional)
+# Set database.enabled=false to use external PostgreSQL
+# ===========================
+database:
+  enabled: true
+  host: aurora-postgres
+  port: 5432
+  name: aurora
+  username: aurora
+  password: ""
+  existingSecret: ""
+  existingSecretUsernameKey: username
+  existingSecretPasswordKey: password
+
+externalDatabase:
+  host: ""
+  port: 5432
+  name: aurora
+  username: aurora
+  existingSecret: ""
+
+# ===========================
+# External Redis (optional)
+# ===========================
+redis:
+  enabled: true
+  host: aurora-redis
+  port: 6379
+  password: ""
+  existingSecret: ""
+  existingSecretPasswordKey: password
+
+externalRedis:
+  host: ""
+  port: 6379
+  existingSecret: ""
+
+# ===========================
+# ConfigMap
+# ===========================
+configMap:
+  application.yml: |
+    server:
+      port: 8080
+      shutdown: graceful
+    spring:
+      threads:
+        virtual:
+          enabled: true
+
+# ===========================
+# LLM Provider Routing (High Availability)
+# ===========================
+llm:
+  primary: anthropic
+  fallback: openai
+  timeout: 15s
+  maxRetries: 3
+  retryDelay: 1s
+  # API Keys — set via External Secrets or Helm --set
+  anthropicApiKey: ""
+  openaiApiKey: ""
+  # Model overrides
+  anthropicModel: claude-sonnet-4-20250514
+  openaiModel: gpt-4o
+
+# ===========================
+# External Secrets Operator (ESO) / HashiCorp Vault
+# ===========================
+externalSecrets:
+  enabled: false
+  backend: vault  # vault, aws, gcp
+  refreshInterval: 1m
+  secretPrefix: "secret/data"
+
+  # Vault-specific config
+  vault:
+    server: "https://vault.internal:8200"
+    path: "secret"
+    namespace: ""
+    authMountPath: "auth/kubernetes"
+    role: "aurora-lowcode"
+
+  # AWS Secrets Manager config
+  aws:
+    region: "us-east-1"
+
+  # GCP Secret Manager config
+  gcp:
+    projectId: ""
+
+# ===========================
+# Database Backup (CronJob → MinIO)
+# ===========================
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2:00 AM UTC
+  historyLimit: 7        # Keep 7 successful backup records in K8s
+  failedHistoryLimit: 3  # Keep 3 failed records
+  activeDeadlineSeconds: 3600  # 1 hour max per backup
+
+  image:
+    repository: postgres
+    tag: 17-alpine
+    pullPolicy: IfNotPresent
+
+  minio:
+    endpoint: "http://aurora-minio:9000"
+    bucket: "aurora-backups"
+
+  resources:
+    limits:
+      cpu: "500m"
+      memory: 512Mi
+    requests:
+      cpu: "100m"
+      memory: 128Mi
+
+  # pgBackRest PITR (Point-in-Time Recovery)
+  pitr:
+    enabled: false  # Enable for production PITR
+    image:
+      repository: pgbackrest/pgbackrest
+      tag: latest
+      pullPolicy: IfNotPresent
+    schedule:
+      full: "0 2 * * 0"    # Weekly full backup (Sunday 2 AM)
+      diff: "0 2 * * 1-6"  # Daily diff backup (Mon-Sat 2 AM)
+    retention:
+      full: 30
+      diff: 7
+    encryption:
+      enabled: true
+      cipherPass: ""  # Set via secret
+    minio:
+      endpoint: "http://aurora-minio:9000"

@@ -1,0 +1,17 @@
+apiVersion: v2
+name: aurora
+description: Aurora Low-Code Platform — Enterprise AI-driven Low-Code Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - low-code
+  - ai
+  - jeecgboot
+  - code-generation
+maintainers:
+  - name: aurora-team
+    email: aurora@example.com
+icon: https://aurora-lowcode.io/logo.png
+sources:
+  - https://github.com/Zc86-bir/aurora-lowcode

@@ -224,7 +224,8 @@ public class SkillRouter {
         if (pattern == null) return null;
 
         for (String skillId : pattern.preferredSkills()) {
-            Optional<SkillDefinitionLoader.SkillDefinition> def = definitionLoader.loadById(skillId);
+            String resolvedId = definitionLoader.resolveAlias(skillId);
+            Optional<SkillDefinitionLoader.SkillDefinition> def = definitionLoader.loadById(resolvedId);
             if (def.isPresent()) {
                 return def.get();
             }

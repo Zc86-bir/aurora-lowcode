@@ -1,0 +1,33 @@
+{{- if .Values.backup.pitr.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aurora.fullname" . }}-pgbackrest
+  labels:
+    {{- include "aurora.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backup
+data:
+  pgbackrest.conf: |
+    [aurora]
+    pg1-path = /var/lib/postgresql/data
+    pg1-port = {{ .Values.database.port }}
+
+    # MinIO as backup storage (S3-compatible)
+    repo1-type = s3
+    repo1-path = /{{ .Values.backup.minio.bucket }}
+    repo1-region = us-east-1
+    repo1-endpoint = {{ .Values.backup.pitr.minio.endpoint | default "aurora-minio:9000" }}
+    repo1-s3-uri-style = path
+    {{- if .Values.backup.pitr.encryption.enabled }}
+    repo1-cipher-type = aes-256-cbc
+    {{- end }}
+
+    # Retention
+    repo1-retention-full = {{ .Values.backup.pitr.retention.full | default 30 }}
+    repo1-retention-diff = {{ .Values.backup.pitr.retention.diff | default 7 }}
+
+    # Performance
+    repo1-bundle = y
+    repo1-block = y
+    process-max = 4
+{{- end }}

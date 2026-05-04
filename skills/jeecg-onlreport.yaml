@@ -1,0 +1,88 @@
+skill_id: jeecg-onlreport
+name: Jeecg Online Report Builder
+description: Generate Online Report configuration compatible with JeecgBoot Online Report feature
+version: 1.0.0
+category: report_design
+executor: ai-pipeline
+author: aurora-team
+created_at: 2026-05-04T00:00:00Z
+updated_at: 2026-05-04T00:00:00Z
+deprecated: false
+aliases:
+  - report_builder
+jeecg_compat: true
+
+tags:
+  - jeecg
+  - onlreport
+  - online
+  - report
+  - data_query
+  - export
+
+input_schema:
+  description:
+    type: string
+    required: true
+    description: Natural language description of the report requirements
+  tenant_id:
+    type: uuid
+    required: true
+  data_source:
+    type: string
+    required: true
+    description: SQL query or table name for report data
+  report_type:
+    type: string
+    required: false
+    default: table
+    enum: [table, pivot, grouped, summary]
+  columns:
+    type: array
+    required: false
+    description: Column definitions (field, label, type, sortable, filterable)
+  filters:
+    type: array
+    required: false
+    description: Query filter definitions
+  export_options:
+    type: object
+    required: false
+    properties:
+      excel: { type: boolean, default: true }
+      pdf: { type: boolean, default: false }
+      csv: { type: boolean, default: true }
+
+output_schema:
+  report_config_id:
+    type: uuid
+    required: true
+  report_json:
+    type: object
+    required: true
+    description: JeecgBoot Online Report compatible JSON configuration
+  query_sql:
+    type: string
+    required: true
+  column_config:
+    type: array
+    required: true
+  filter_config:
+    type: array
+    required: true
+  checksum:
+    type: string
+    required: true
+
+business_rules:
+  - "Report SQL must be parameterized (no string concatenation)"
+  - "Column types must be valid JeecgBoot report column types"
+  - "Aggregation functions must be valid SQL"
+  - "Report must include tenant_id filter for multi-tenancy"
+  - "Pagination required for large result sets"
+
+security_rules:
+  - "SQL must be validated against injection patterns"
+  - "Report data scoped to tenant permissions"
+  - "Export limited to authorized data only"
+  - "Audit log entry created for report execution"

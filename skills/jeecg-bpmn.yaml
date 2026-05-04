@@ -1,0 +1,82 @@
+skill_id: jeecg-bpmn
+name: Jeecg BPMN Workflow Generator
+description: Generate BPMN 2.0 XML workflow definitions from natural language descriptions with JeecgBoot ACT compatibility
+version: 1.0.0
+category: workflow
+executor: ai-pipeline
+author: aurora-team
+created_at: 2026-05-04T00:00:00Z
+updated_at: 2026-05-04T00:00:00Z
+deprecated: false
+aliases:
+  - workflow_designer
+jeecg_compat: true
+
+tags:
+  - jeecg
+  - bpmn
+  - workflow
+  - activiti
+  - process
+  - approval
+
+input_schema:
+  description:
+    type: string
+    required: true
+    description: Natural language description of the workflow process
+  tenant_id:
+    type: uuid
+    required: true
+  process_name:
+    type: string
+    required: false
+    description: Workflow process name (auto-derived if omitted)
+  nodes:
+    type: array
+    required: false
+    description: Explicit node definitions (type, name, assignee, conditions)
+  process_type:
+    type: string
+    required: false
+    default: approval
+    enum: [approval, parallel, sequential, conditional]
+  form_key:
+    type: string
+    required: false
+    description: Associated form key for task forms
+
+output_schema:
+  process_id:
+    type: uuid
+    required: true
+  bpmn_xml:
+    type: string
+    required: true
+    description: Valid BPMN 2.0 XML content
+  process_definition_key:
+    type: string
+    required: true
+  node_count:
+    type: number
+    required: true
+  validation_errors:
+    type: array
+    required: true
+  checksum:
+    type: string
+    required: true
+
+business_rules:
+  - "Process definition key must be unique within tenant"
+  - "BPMN XML must be valid against BPMN 2.0 schema"
+  - "Each user task must have an assignee or candidate group"
+  - "Gateway conditions must be valid EL expressions"
+  - "Process must have exactly one start event and one end event"
+  - "Generated workflow must be compatible with JeecgBoot Activiti 7.x"
+
+security_rules:
+  - "No EL injection in assignee expressions"
+  - "Process permissions scoped to tenant"
+  - "Audit log entry created for workflow generation"
+  - "Generated XML must not contain hardcoded credentials"

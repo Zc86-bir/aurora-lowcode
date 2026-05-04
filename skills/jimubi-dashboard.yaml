@@ -1,0 +1,82 @@
+skill_id: jimubi-dashboard
+name: JimuBI Dashboard Designer
+description: Generate JimuBI dashboard configurations with drag-and-drop widgets and data bindings
+version: 1.0.0
+category: dashboard_design
+executor: ai-pipeline
+author: aurora-team
+created_at: 2026-05-04T00:00:00Z
+updated_at: 2026-05-04T00:00:00Z
+deprecated: false
+aliases:
+  - dashboard_designer
+jeecg_compat: true
+
+tags:
+  - jimubi
+  - dashboard
+  - widget
+  - data_binding
+  - visualization
+  - analytics
+
+input_schema:
+  description:
+    type: string
+    required: true
+    description: Natural language description of the dashboard requirements
+  tenant_id:
+    type: uuid
+    required: true
+  dashboard_name:
+    type: string
+    required: false
+    description: Dashboard name (auto-derived if omitted)
+  layout:
+    type: string
+    required: false
+    default: grid
+    enum: [grid, flex, free]
+  widgets:
+    type: array
+    required: false
+    description: Widget definitions (type, title, data_source, config, position)
+  refresh_interval:
+    type: number
+    required: false
+    default: 30
+    description: Auto-refresh interval in seconds
+
+output_schema:
+  dashboard_id:
+    type: uuid
+    required: true
+  dashboard_json:
+    type: object
+    required: true
+    description: JimuBI compatible dashboard configuration JSON
+  widget_configs:
+    type: array
+    required: true
+  data_bindings:
+    type: array
+    required: true
+  layout_config:
+    type: object
+    required: true
+  checksum:
+    type: string
+    required: true
+
+business_rules:
+  - "Dashboard JSON must be valid JimuBI schema"
+  - "Widget types must be supported by JimuBI engine"
+  - "Data bindings must resolve to valid queries or APIs"
+  - "Layout positions must not overlap"
+  - "Dashboard must be shareable with permission control"
+
+security_rules:
+  - "Widget data sources validated against injection"
+  - "Dashboard data scoped to tenant permissions"
+  - "Share permissions enforced"
+  - "Audit log entry created for dashboard changes"

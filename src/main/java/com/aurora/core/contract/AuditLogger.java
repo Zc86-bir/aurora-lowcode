@@ -113,7 +113,8 @@ public interface AuditLogger {
         Map<String, Object> metadata,
         Instant timestamp,
         String ipAddress,
-        String userAgent
+        String userAgent,
+        String traceId
     ) {}
 
     /**
