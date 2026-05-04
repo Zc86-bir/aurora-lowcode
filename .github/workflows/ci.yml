@@ -46,7 +46,7 @@ jobs:
         run: mvn -B test -DskipITs -Djacoco.skip=true -DskipSpringdoc=true
 
       - name: Run Integration Tests
-        run: mvn -B verify -DskipUTs -Djacoco.skip=true -DskipSpringdoc=true
+        run: mvn -B verify -DskipUTs -Djacoco.skip=true -DskipSpringdoc=true -Dspotbugs.skip=true
 
       - name: Upload test results
         if: always()
@@ -77,7 +77,7 @@ jobs:
           cache: maven
 
       - name: Run SpotBugs
-        run: mvn -B com.github.spotbugs:spotbugs-maven-plugin:spotbugs -DskipTests -DskipSpringdoc=true
+        run: mvn -B compile com.github.spotbugs:spotbugs-maven-plugin:spotbugs -DskipTests -DskipSpringdoc=true
 
       - name: Upload SpotBugs report
         if: always()
