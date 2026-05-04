@@ -8,7 +8,7 @@ on:
 
 permissions:
   contents: read
-  security-alerts: write
+  security-events: write
 
 jobs:
   # ===========================
