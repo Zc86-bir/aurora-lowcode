@@ -89,13 +89,12 @@
 
         <!-- Utility Libraries -->
         <mapstruct.version>1.6.3</mapstruct.version>
-        <json-schema-validator.version>1.5.2</json-schema-validator.version>
+        <json-schema-validator.version>1.5.4</json-schema-validator.version>
         <javaparser.version>3.26.2</javaparser.version>
         <lombok.version>1.18.38</lombok.version>
         <guava.version>33.3.1-jre</guava.version>
         <commons-lang3.version>3.17.0</commons-lang3.version>
         <commons-io.version>2.18.0</commons-io.version>
-        <json-schema-validator.version>1.5.4</json-schema-validator.version>
         <snakeyaml.version>2.3</snakeyaml.version>
         <jackson.version>2.18.2</jackson.version>
 
@@ -148,6 +147,7 @@
         <skipTests>false</skipTests>
         <skipITs>${skipTests}</skipITs>
         <skipUTs>${skipTests}</skipUTs>
+        <skipSpringdoc>false</skipSpringdoc>
     </properties>
 
     <!-- ================================================================== -->
@@ -429,12 +429,6 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>${commons-io.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.networknt</groupId>
-            <artifactId>json-schema-validator</artifactId>
-            <version>${json-schema-validator.version}</version>
         </dependency>
 
         <dependency>
@@ -755,7 +749,7 @@
                             <apiDocsUrl>http://localhost:8080/v3/api-docs.yaml</apiDocsUrl>
                             <outputFileName>api-docs.yaml</outputFileName>
                             <outputDir>${project.basedir}/frontend/src/api</outputDir>
-                            <skip>${skipTests}</skip>
+                            <skip>${skipSpringdoc}</skip>
                         </configuration>
                     </execution>
                 </executions>
