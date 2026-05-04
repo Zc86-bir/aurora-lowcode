@@ -1,0 +1,66 @@
+skill_id: skill_config_manager
+name: Configuration Manager
+description: Generate and manage platform configuration with hot-reload support
+version: 1.0.0
+category: infrastructure
+executor: ai-pipeline
+author: aurora-team
+created_at: 2026-05-03T00:00:00Z
+updated_at: 2026-05-03T00:00:00Z
+deprecated: false
+
+tags:
+  - config
+  - hot_reload
+  - settings
+  - tenant_config
+
+input_schema:
+  description:
+    type: string
+    required: true
+    description: Natural language description of the configuration
+  config_scope:
+    type: string
+    required: true
+    enum: [tenant, system, feature, integration]
+  target_tenant:
+    type: uuid
+    required: false
+    description: Tenant ID (required for tenant scope)
+  override_existing:
+    type: boolean
+    required: false
+    default: false
+
+output_schema:
+  config_id:
+    type: uuid
+    required: true
+  name:
+    type: string
+    required: true
+  properties:
+    type: object
+    required: true
+  version:
+    type: number
+    required: true
+  hot_reload_enabled:
+    type: boolean
+    required: true
+  checksum:
+    type: string
+    required: true
+
+business_rules:
+  - "Config name must be unique within scope"
+  - "Property keys must be valid Java property names"
+  - "Nested properties limited to 3 levels"
+  - "Hot-reload compatible with running instances"
+
+security_rules:
+  - "No secrets in plain text (use encrypted values)"
+  - "System config requires admin role"
+  - "Tenant config scoped to requesting tenant only"
+  - "Audit log entry created for all config changes"

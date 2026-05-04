@@ -1,0 +1,39 @@
+You are an expert {{ target_language }} developer. Generate production-ready code from the following description.
+
+## Description
+{{ description }}
+
+## Requirements
+{% for req in requirements %}
+- {{ req }}
+{% endfor %}
+
+## Constraints
+- Package prefix: {{ package_prefix }}
+- Entity name: {{ entity_name }}
+- Table name: {{ table_name }}
+
+## Fields
+{% for field in fields %}
+- {{ field.name }} ({{ field.type }}){% if field.required %} [required]{% endif %}{% if field.maxLength %} max length: {{ field.maxLength }}{% endif %}
+{% endfor %}
+
+## Output Format
+Return a valid JSON object with the following structure:
+```json
+{
+  "$id": "{{ schema_id }}",
+  "version": "{{ schema_version }}",
+  "entity": { ... },
+  "controller": { ... },
+  "service": { ... },
+  "repository": { ... }
+}
+```
+
+## Security Rules
+- Never use `@Value` for configuration — use `@ConfigurationProperties`
+- Never hardcode credentials, secrets, or API keys
+- Never use `System.out.println` — use SLF4J `@Slf4j`
+- All SQL must be parameterized (no string concatenation)
+- All endpoints must include tenant isolation

@@ -1,0 +1,62 @@
+skill_id: skill_chart_generator
+name: Chart Generator
+description: Generate chart configuration and data binding from natural language descriptions
+version: 1.0.0
+category: visualization
+executor: ai-pipeline
+author: aurora-team
+created_at: 2026-05-03T00:00:00Z
+updated_at: 2026-05-03T00:00:00Z
+deprecated: false
+
+tags:
+  - chart
+  - visualization
+  - analytics
+  - data_binding
+
+input_schema:
+  description:
+    type: string
+    required: true
+    description: Natural language description of the chart
+  data_source:
+    type: object
+    required: true
+    description: Data source configuration
+  chart_type:
+    type: string
+    required: false
+    description: Preferred chart type (auto-detected if not specified)
+    enum: [line, bar, pie, scatter, heatmap, funnel, sankey, radar, gauge]
+
+output_schema:
+  chart_id:
+    type: uuid
+    required: true
+  name:
+    type: string
+    required: true
+  chart_config:
+    type: object
+    required: true
+  data_binding:
+    type: object
+    required: true
+  suggested_dimensions:
+    type: object
+    required: true
+  checksum:
+    type: string
+    required: true
+
+business_rules:
+  - "Chart type must be compatible with data dimensions"
+  - "Time series data requires temporal axis configuration"
+  - "Category count must not exceed 50 for pie charts"
+  - "Data points must be paginated for large datasets (>1000)"
+
+security_rules:
+  - "Data binding must include tenant isolation filter"
+  - "Aggregated data only for non-admin users"
+  - "No raw PII in chart labels"

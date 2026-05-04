@@ -1,0 +1,235 @@
+// frontend/src/styles/tokens.css
+// Design Token System — compiled by ThemeCompiler.ts
+// Supports light/dark/high-contrast/colorblind modes
+// All values are CSS custom properties for runtime switching < 50ms
+
+:root {
+  /* ═══════════════════════════════════════
+     SPACING SCALE (4px base grid)
+     ═══════════════════════════════════════ */
+  --space-0: 0px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+
+  /* ═══════════════════════════════════════
+     TYPOGRAPHY
+     ═══════════════════════════════════════ */
+  --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-size-xs: 0.75rem;   /* 12px */
+  --font-size-sm: 0.875rem;  /* 14px */
+  --font-size-base: 1rem;    /* 16px */
+  --font-size-lg: 1.125rem;  /* 18px */
+  --font-size-xl: 1.25rem;   /* 20px */
+  --font-size-2xl: 1.5rem;   /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+  --font-size-4xl: 2.25rem;  /* 36px */
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ═══════════════════════════════════════
+     BORDER RADIUS
+     ═══════════════════════════════════════ */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-full: 9999px;
+
+  /* ═══════════════════════════════════════
+     SHADOWS
+     ═══════════════════════════════════════ */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* ═══════════════════════════════════════
+     TRANSITIONS
+     ═══════════════════════════════════════ */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ═══════════════════════════════════════
+     Z-INDEX SCALE
+     ═══════════════════════════════════════ */
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-overlay: 1200;
+  --z-modal: 1300;
+  --z-popover: 1400;
+  --z-tooltip: 1500;
+  --z-toast: 1600;
+
+  /* ═══════════════════════════════════════
+     LAYOUT
+     ═══════════════════════════════════════ */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --header-height: 56px;
+  --sidebar-width: 280px;
+}
+
+/* ═══════════════════════════════════════
+   SEMANTIC COLOR TOKENS (Light Mode - Default)
+   ═══════════════════════════════════════ */
+[data-theme='light'],
+:root {
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-tertiary: #f3f4f6;
+  --color-bg-elevated: #ffffff;
+  --color-bg-overlay: #ffffff;
+  --color-bg-inverted: #111827;
+
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+  --color-text-tertiary: #9ca3af;
+  --color-text-inverted: #ffffff;
+  --color-text-link: #2563eb;
+  --color-text-link-hover: #1d4ed8;
+  --color-text-disabled: #d1d5db;
+
+  --color-border-primary: #e5e7eb;
+  --color-border-secondary: #f3f4f6;
+  --color-border-focus: #2563eb;
+
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+
+  --color-success-50: #f0fdf4;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-warning-50: #fffbeb;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-danger-50: #fef2f2;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+
+  --focus-ring: 0 0 0 2px var(--color-bg-primary), 0 0 0 4px var(--color-border-focus);
+}
+
+/* ═══════════════════════════════════════
+   DARK MODE
+   ═══════════════════════════════════════ */
+[data-theme='dark'] {
+  --color-bg-primary: #111827;
+  --color-bg-secondary: #1f2937;
+  --color-bg-tertiary: #374151;
+  --color-bg-elevated: #1f2937;
+  --color-bg-overlay: #1f2937;
+  --color-bg-inverted: #f9fafb;
+
+  --color-text-primary: #f9fafb;
+  --color-text-secondary: #9ca3af;
+  --color-text-tertiary: #6b7280;
+  --color-text-inverted: #111827;
+  --color-text-link: #60a5fa;
+  --color-text-link-hover: #93c5fd;
+  --color-text-disabled: #4b5563;
+
+  --color-border-primary: #374151;
+  --color-border-secondary: #1f2937;
+  --color-border-focus: #60a5fa;
+
+  --color-primary-50: #1e3a5f;
+  --color-primary-100: #1e40af;
+  --color-primary-200: #1d4ed8;
+  --color-primary-300: #2563eb;
+  --color-primary-400: #3b82f6;
+  --color-primary-500: #60a5fa;
+  --color-primary-600: #93c5fd;
+  --color-primary-700: #bfdbfe;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+
+  --focus-ring: 0 0 0 2px var(--color-bg-primary), 0 0 0 4px var(--color-border-focus);
+}
+
+/* ═══════════════════════════════════════
+   HIGH CONTRAST MODE (WCAG 2.1 AAA)
+   ═══════════════════════════════════════ */
+[data-theme='high-contrast'] {
+  --color-bg-primary: #000000;
+  --color-bg-secondary: #0a0a0a;
+  --color-bg-tertiary: #1a1a1a;
+  --color-bg-elevated: #0a0a0a;
+  --color-bg-overlay: #0a0a0a;
+  --color-bg-inverted: #ffffff;
+
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #e5e7eb;
+  --color-text-tertiary: #d1d5db;
+  --color-text-inverted: #000000;
+  --color-text-link: #4da3ff;
+  --color-text-link-hover: #80bfff;
+
+  --color-border-primary: #ffffff;
+  --color-border-secondary: #6b7280;
+  --color-border-focus: #4da3ff;
+
+  --color-primary-500: #4da3ff;
+  --color-success-500: #4ade80;
+  --color-warning-500: #fbbf24;
+  --color-danger-500: #f87171;
+
+  --focus-ring: 0 0 0 3px #000, 0 0 0 6px #4da3ff;
+}
+
+/* ═══════════════════════════════════════
+   COLORBLIND MODE (Deuteranopia-friendly)
+   ═══════════════════════════════════════ */
+[data-theme='colorblind'] {
+  --color-primary-500: #2563eb;
+  --color-success-500: #f59e0b; /* Amber instead of green */
+  --color-warning-500: #8b5cf6; /* Purple instead of orange */
+  --color-danger-500: #ef4444;
+}
+
+/* ═══════════════════════════════════════
+   A11Y: FOCUS STYLES (WCAG 2.1 AA)
+   ═══════════════════════════════════════ */
+*:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ═══════════════════════════════════════
+   A11Y: REDUCED MOTION
+   ═══════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

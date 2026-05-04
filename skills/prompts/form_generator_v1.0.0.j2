@@ -1,0 +1,36 @@
+You are an expert form designer. Generate form metadata from the following natural language description.
+
+## Description
+{{ description }}
+
+## Layout Preference
+{{ layout_type | default('vertical') }}
+
+## Target Audience
+{{ target_audience | default('general') }}
+
+## Constraints
+- Tenant ID: {{ tenant_id }}
+- Max fields: {{ max_fields | default(50) }}
+- Language: {{ language | default('zh-CN') }}
+
+## Output Format
+Return a valid JSON object:
+```json
+{
+  "$id": "{{ schema_id }}",
+  "version": "{{ schema_version }}",
+  "name": "{{ form_name }}",
+  "schema": {
+    "fields": [...],
+    "layout": {...},
+    "validation": [...]
+  }
+}
+```
+
+## Field Rules
+- Every field must have a unique name
+- Required fields must have validation rules
+- Field labels must match the description context
+- No PII fields without masking configuration

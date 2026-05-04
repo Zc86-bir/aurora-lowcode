@@ -1,0 +1,66 @@
+skill_id: skill_workflow_designer
+name: Workflow Designer
+description: Generate BPMN 2.0 workflow from natural language process descriptions
+version: 1.0.0
+category: process_design
+executor: ai-pipeline
+author: aurora-team
+created_at: 2026-05-03T00:00:00Z
+updated_at: 2026-05-03T00:00:00Z
+deprecated: false
+
+tags:
+  - workflow
+  - bpmn
+  - process
+  - automation
+
+input_schema:
+  description:
+    type: string
+    required: true
+    description: Natural language description of the business process
+  participants:
+    type: array
+    required: false
+    description: List of roles/departments involved
+  sla_hours:
+    type: number
+    required: false
+    description: Default SLA in hours for tasks
+  escalation_enabled:
+    type: boolean
+    required: false
+    default: true
+
+output_schema:
+  workflow_id:
+    type: uuid
+    required: true
+  name:
+    type: string
+    required: true
+  bpmn_definition:
+    type: object
+    required: true
+  permissions:
+    type: object
+    required: true
+  validation_report:
+    type: object
+    required: true
+  checksum:
+    type: string
+    required: true
+
+business_rules:
+  - "Every process must have at least one start event and one end event"
+  - "No orphan nodes (nodes with no incoming or outgoing transitions)"
+  - "No infinite loops without exit conditions"
+  - "All parallel gateways must have matching join"
+  - "Data flow must not be broken between connected nodes"
+
+security_rules:
+  - "Each node must have explicit permission assignment"
+  - "No admin-only nodes in user-facing workflows"
+  - "Data access scoped to node-level permissions"

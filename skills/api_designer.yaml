@@ -1,0 +1,69 @@
+skill_id: skill_api_designer
+name: API Designer
+description: Generate REST API endpoint configuration and Swagger spec from natural language
+version: 1.0.0
+category: integration
+executor: ai-pipeline
+author: aurora-team
+created_at: 2026-05-03T00:00:00Z
+updated_at: 2026-05-03T00:00:00Z
+deprecated: false
+
+tags:
+  - api
+  - rest
+  - swagger
+  - endpoint
+
+input_schema:
+  description:
+    type: string
+    required: true
+    description: Natural language description of the API
+  method:
+    type: string
+    required: false
+    default: GET
+    enum: [GET, POST, PUT, PATCH, DELETE]
+  base_path:
+    type: string
+    required: false
+    description: API base path (auto-generated if not specified)
+  authentication:
+    type: string
+    required: false
+    default: bearer
+    enum: [bearer, api_key, oauth2, none]
+
+output_schema:
+  api_id:
+    type: uuid
+    required: true
+  name:
+    type: string
+    required: true
+  endpoint:
+    type: object
+    required: true
+  swagger:
+    type: object
+    required: true
+  security_config:
+    type: object
+    required: true
+  checksum:
+    type: string
+    required: true
+
+business_rules:
+  - "API path must follow RESTful conventions"
+  - "Request/response schemas must be valid OpenAPI 3.1"
+  - "Rate limiting must be configured"
+  - "Pagination required for collection endpoints"
+
+security_rules:
+  - "All endpoints must have authentication"
+  - "Input validation on all parameters"
+  - "Output data filtered by field-level permissions"
+  - "CORS configuration restricted to trusted origins"
+  - "No sensitive data in URL path parameters"

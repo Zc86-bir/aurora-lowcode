@@ -1,0 +1,67 @@
+skill_id: skill_template_generator
+name: Template Generator
+description: Generate document templates (PDF/Excel/Word) from natural language descriptions
+version: 1.0.0
+category: document_generation
+executor: ai-pipeline
+author: aurora-team
+created_at: 2026-05-03T00:00:00Z
+updated_at: 2026-05-03T00:00:00Z
+deprecated: false
+
+tags:
+  - template
+  - pdf
+  - excel
+  - word
+  - export
+
+input_schema:
+  description:
+    type: string
+    required: true
+    description: Natural language description of the document template
+  output_format:
+    type: string
+    required: true
+    enum: [pdf, excel, word]
+  data_source:
+    type: object
+    required: false
+    description: Data source for template binding
+  locale:
+    type: string
+    required: false
+    default: zh-CN
+    description: Locale for number/date formatting
+
+output_schema:
+  template_id:
+    type: uuid
+    required: true
+  name:
+    type: string
+    required: true
+  template_content:
+    type: object
+    required: true
+  data_mappings:
+    type: array
+    required: true
+  export_config:
+    type: object
+    required: true
+  checksum:
+    type: string
+    required: true
+
+business_rules:
+  - "Template name must be unique within tenant"
+  - "All data mappings must resolve to valid fields"
+  - "Page breaks must not split table rows"
+  - "Charts in templates must have placeholder data dimensions"
+
+security_rules:
+  - "No sensitive data in template preview"
+  - "Export limited by user's data permissions"
+  - "Watermark required for confidential documents"

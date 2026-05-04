@@ -1,0 +1,68 @@
+skill_id: skill_dashboard_designer
+name: Dashboard Designer
+description: Generate dashboard layout with components and data bindings from natural language
+version: 1.0.0
+category: ui_design
+executor: ai-pipeline
+author: aurora-team
+created_at: 2026-05-03T00:00:00Z
+updated_at: 2026-05-03T00:00:00Z
+deprecated: false
+
+tags:
+  - dashboard
+  - layout
+  - visualization
+  - data_binding
+
+input_schema:
+  description:
+    type: string
+    required: true
+    description: Natural language description of the dashboard
+  target_audience:
+    type: string
+    required: false
+    default: general
+    enum: [executive, manager, operator, analyst]
+  layout_preference:
+    type: string
+    required: false
+    default: grid
+    enum: [grid, masonry, freeform]
+  data_refresh_interval:
+    type: number
+    required: false
+    default: 30
+    description: Auto-refresh interval in seconds
+
+output_schema:
+  dashboard_id:
+    type: uuid
+    required: true
+  name:
+    type: string
+    required: true
+  components:
+    type: array
+    required: true
+  layout:
+    type: object
+    required: true
+  data_bindings:
+    type: array
+    required: true
+  checksum:
+    type: string
+    required: true
+
+business_rules:
+  - "Dashboard name must be unique within tenant"
+  - "Components must have valid data source bindings"
+  - "Layout grid must not overlap"
+  - "Total component area must fit within viewport"
+
+security_rules:
+  - "Data bindings must respect user's row-level permissions"
+  - "No cross-tenant data access in shared dashboards"
+  - "Sensitive metrics masked based on user role"

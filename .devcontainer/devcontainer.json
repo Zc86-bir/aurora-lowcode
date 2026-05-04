@@ -1,0 +1,56 @@
+{
+  "name": "Aurora Low-Code Platform",
+  "image": "mcr.microsoft.com/devcontainers/java:25-jdk-25-bullseye",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    },
+    "ghcr.io/devcontainers-contrib/features/pnpm:2": {
+      "version": "9"
+    },
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "25",
+      "installMaven": true,
+      "installGradle": false
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vmware.vscode-boot-dev-pack",
+        "vscjava.vscode-java-pack",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "Vue.volar",
+        "redhat.vscode-yaml",
+        "ms-ossdata.vscode-postgresql"
+      ],
+      "settings": {
+        "java.jdt.ls.java.home": "/docker-java-home",
+        "java.configuration.updateBuildConfiguration": "automatic"
+      }
+    }
+  },
+  "forwardPorts": [8080, 3000, 5432, 6379],
+  "portsAttributes": {
+    "8080": {
+      "label": "Spring Boot API"
+    },
+    "3000": {
+      "label": "Vue Frontend"
+    },
+    "5432": {
+      "label": "PostgreSQL"
+    },
+    "6379": {
+      "label": "Redis"
+    }
+  },
+  "postCreateCommand": "docker compose -f docker-compose.dev.yml up -d && mvn dependency:resolve",
+  "remoteEnv": {
+    "SPRING_PROFILES_ACTIVE": "dev",
+    "DATABASE_URL": "jdbc:postgresql://localhost:5432/aurora",
+    "REDIS_URL": "redis://localhost:6379"
+  }
+}

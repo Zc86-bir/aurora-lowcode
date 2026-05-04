@@ -1,0 +1,61 @@
+{
+  "name": "aurora-lowcode-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit",
+    "lint": "eslint src --ext .ts,.vue",
+    "lint:fix": "eslint src --ext .ts,.vue --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "a11y:scan": "node scripts/a11y-scan.mjs",
+    "generate:api": "openapi-ts -i ../src/main/resources/api-docs.yaml -o src/api/generated -c fetch",
+    "generate:api:remote": "openapi-ts -i http://localhost:8080/v3/api-docs -o src/api/generated -c fetch",
+    "preinstall": "npx only-allow pnpm"
+  },
+  "dependencies": {
+    "vue": "^3.5.0",
+    "vue-router": "^4.4.0",
+    "pinia": "^2.2.0",
+    "@tanstack/vue-query": "^5.60.0",
+    "@tanstack/vue-virtual": "^3.10.0",
+    "@vueuse/core": "^11.0.0",
+    "yjs": "^13.6.0",
+    "y-websocket": "^2.0.0",
+    "echarts": "^5.5.0",
+    "vue-echarts": "^7.0.0",
+    "axe-core": "^4.10.0",
+    "date-fns": "^4.1.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.60.0",
+    "@vitejs/plugin-vue": "^5.1.0",
+    "@vitejs/plugin-vue-jsx": "^4.0.0",
+    "unplugin-vue-router": "^0.10.0",
+    "unplugin-vue-components": "^0.27.0",
+    "unplugin-auto-import": "^0.18.0",
+    "unocss": "^0.63.0",
+    "vite": "^6.0.0",
+    "vite-plugin-compression2": "^1.3.0",
+    "rollup-plugin-visualizer": "^5.12.0",
+    "typescript": "^5.5.0",
+    "vue-tsc": "^2.1.0",
+    "vitest": "^2.1.0",
+    "@vitest/coverage-v8": "^2.1.0",
+    "eslint": "^9.0.0",
+    "@antfu/eslint-config": "^3.0.0",
+    "happy-dom": "^15.0.0",
+    "@types/node": "^22.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.12.0"
+}

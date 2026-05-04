@@ -1,0 +1,308 @@
+# Aurora Low-Code Platform - Application Configuration
+# Environment override via SPRING_PROFILES_ACTIVE=dev/test/prod
+# All values use ${ENV_VAR:default} pattern — never hardcode localhost or ports directly.
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: ${CONTEXT_PATH:/}
+  shutdown: graceful
+
+# ====================
+# Spring Boot Core
+# ====================
+spring:
+  threads:
+    virtual:
+      enabled: true
+
+  application:
+    name: ${APP_NAME:aurora-lowcode}
+
+  datasource:
+    url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:aurora}
+    username: ${DATABASE_USER:aurora}
+    password: ${DATABASE_PASSWORD:aurora_dev_password}
+    hikari:
+      maximum-pool-size: ${HIKARI_MAX_POOL:20}
+      minimum-idle: ${HIKARI_MIN_IDLE:5}
+      connection-timeout: ${HIKARI_CONN_TIMEOUT:30000}
+      idle-timeout: ${HIKARI_IDLE_TIMEOUT:600000}
+      max-lifetime: ${HIKARI_MAX_LIFETIME:1800000}
+      pool-name: HikariPool-Aurora
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:aurora_redis_password}
+      timeout: ${REDIS_TIMEOUT:5000ms}
+      lettuce:
+        pool:
+          max-active: ${REDIS_POOL_MAX:10}
+          max-idle: ${REDIS_POOL_IDLE:5}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:aurora}
+    user: ${DATABASE_USER:aurora}
+    password: ${DATABASE_PASSWORD:aurora_dev_password}
+    locations: classpath:db/migration
+    schemas: public
+
+# ====================
+# Aurora Platform
+# ====================
+aurora:
+  tenant:
+    default-tier: ${DEFAULT_TIER:FREE}
+    max-metadata-per-tenant: ${MAX_METADATA:1000}
+    max-skills-per-tenant: ${MAX_SKILLS:100}
+    session-timeout: ${SESSION_TIMEOUT:30m}
+
+  security:
+    jwt-secret: ${JWT_SECRET:change-me-in-production-use-real-secret}
+    jwt-expiration: ${JWT_EXPIRATION:1h}
+    max-login-attempts: ${MAX_LOGIN_ATTEMPTS:5}
+    lockout-duration: ${LOCKOUT_DURATION:15m}
+    cors:
+      allowed-origins: ${CORS_ORIGINS:http://localhost:3000}
+      allowed-methods: ${CORS_METHODS:GET,POST,PUT,DELETE,OPTIONS}
+      max-age: ${CORS_MAX_AGE:3600s}
+    rate-limit:
+      requests-per-minute: ${RATE_LIMIT_MIN:60}
+      requests-per-hour: ${RATE_LIMIT_HOUR:1000}
+      enabled: ${RATE_LIMIT_ENABLED:true}
+
+  skill:
+    execution:
+      default-timeout: ${SKILL_TIMEOUT:30s}
+      max-concurrent-executions: ${SKILL_MAX_CONCURRENT:50}
+      retry-on-failure: ${SKILL_RETRY:true}
+    sandbox:
+      enabled: ${SANDBOX_ENABLED:true}
+      timeout: ${SANDBOX_TIMEOUT:10s}
+      max-memory-mb: ${SANDBOX_MEMORY:256}
+      network-isolation: ${SANDBOX_NETWORK:true}
+    fallback:
+      default-strategy: ${FALLBACK_STRATEGY:GRACEFUL}
+      max-retries: ${FALLBACK_RETRIES:3}
+      retry-delay: ${FALLBACK_DELAY:1s}
+
+  ai-pipeline:
+    validation:
+      schema-validation-enabled: ${AI_SCHEMA_VALIDATION:true}
+      business-rule-check-enabled: ${AI_BUSINESS_RULES:true}
+      static-analysis-enabled: ${AI_STATIC_ANALYSIS:true}
+      test-generation-enabled: ${AI_TEST_GEN:true}
+    output:
+      base-path: ${AI_OUTPUT_PATH:/tmp/aurora-generated}
+      create-git-commit: ${AI_GIT_COMMIT:false}
+      enable-rollback: ${AI_ROLLBACK:true}
+      max-files-per-generation: ${AI_MAX_FILES:50}
+
+  metadata:
+    versioning:
+      enabled: ${META_VERSIONING:true}
+      max-versions-per-metadata: ${META_MAX_VERSIONS:100}
+      retention-period: ${META_RETENTION:365d}
+    hot-reload:
+      enabled: ${META_HOT_RELOAD:true}
+      max-cache-size: ${META_CACHE_SIZE:1000}
+      check-interval: ${META_CHECK_INTERVAL:10s}
+    storage:
+      type: ${META_STORAGE_TYPE:database}
+      connection-properties:
+        url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:aurora}
+
+  code-generator:
+    java:
+      base-package: ${CODE_GEN_PACKAGE:com.aurora}
+      excluded-patterns: ${CODE_GEN_EXCLUDE:}
+      enable-swagger: ${CODE_GEN_SWAGGER:true}
+      enable-comments: ${CODE_GEN_COMMENTS:false}
+    vue:
+      components-path: ${CODE_GEN_VUE_COMPONENTS:src/views}
+      types-path: ${CODE_GEN_VUE_TYPES:src/types}
+      enable-typescript: ${CODE_GEN_TS:true}
+      enable-composition-api: ${CODE_GEN_COMPOSITION:true}
+    sql:
+      migration-path: ${CODE_GEN_SQL:src/main/resources/db/migration}
+      dialect: ${CODE_GEN_SQL_DIALECT:postgresql}
+      enable-indexes: ${CODE_GEN_INDEXES:true}
+      enable-triggers: ${CODE_GEN_TRIGGERS:true}
+
+# ====================
+# MCP Server (SSE Transport)
+# ====================
+aurora:
+  mcp:
+    auth:
+      enabled: ${MCP_AUTH_ENABLED:true}
+      header: Authorization
+      prefix: "Bearer "
+    server:
+      name: aurora-lowcode
+      version: 1.0.0
+    sse:
+      endpoint: /mcp/sse
+      message-endpoint: /mcp/message
+
+# ====================
+# Spring AI MCP Server
+# ====================
+spring:
+  ai:
+    mcp:
+      server:
+        name: ${AURORA_MCP_NAME:aurora-lowcode}
+        version: ${AURORA_MCP_VERSION:1.0.0}
+        sse-message-endpoint: /mcp/message
+
+# ====================
+# Observability
+# ====================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ${METRICS_ENDPOINTS:health,info,prometheus,metrics}
+  metrics:
+    tags:
+      application: ${APP_NAME:aurora-lowcode}
+      environment: ${SPRING_PROFILES_ACTIVE:dev}
+
+# ====================
+# Logging
+# ====================
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
+    com.aurora: ${LOG_LEVEL_APP:DEBUG}
+    org.hibernate.SQL: ${LOG_SQL:WARN}
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSS} [%thread] %-5level %logger{36} - tenantId=%X{tenantId} requestId=%X{requestId} - %msg%n"
+
+# ====================
+# OpenAPI / SpringDoc
+# ====================
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: method
+  openapi:
+    info:
+      title: Aurora Low-Code Platform API
+      description: Enterprise-grade AI-driven Low-Code Platform REST API
+      version: 1.0.0
+      contact:
+        name: Aurora Team
+        email: aurora@example.com
+      license:
+        name: Apache 2.0
+        url: https://www.apache.org/licenses/LICENSE-2.0.html
+    servers:
+      - url: http://localhost:8080
+        description: Local development server
+      - url: https://api.aurora.example.com
+        description: Production server
+
+---
+# ====================
+# Profile: dev
+# ====================
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+aurora:
+  security:
+    jwt-secret: dev-jwt-secret-not-for-production
+    cors:
+      allowed-origins: http://localhost:3000,http://localhost:5173
+
+logging:
+  level:
+    root: DEBUG
+    com.aurora: DEBUG
+    org.hibernate.SQL: DEBUG
+
+---
+# ====================
+# Profile: test
+# ====================
+spring:
+  config:
+    activate:
+      on-profile: test
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+
+  flyway:
+    enabled: false
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+aurora:
+  skill:
+    sandbox:
+      enabled: false
+  metadata:
+    hot-reload:
+      enabled: false
+
+---
+# ====================
+# Profile: prod
+# ====================
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+server:
+  port: ${SERVER_PORT:8443}
+  ssl:
+    enabled: ${SSL_ENABLED:true}
+    key-store: ${SSL_KEYSTORE:classpath:keystore.p12}
+    key-store-password: ${SSL_KEYSTORE_PASSWORD}
+
+aurora:
+  security:
+    jwt-secret: ${JWT_SECRET}
+    rate-limit:
+      enabled: true
+      requests-per-minute: 120
+  skill:
+    sandbox:
+      enabled: true
+      network-isolation: true
+
+logging:
+  level:
+    root: WARN
+    com.aurora: INFO
+    org.hibernate.SQL: WARN

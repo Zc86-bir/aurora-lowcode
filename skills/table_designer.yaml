@@ -1,0 +1,67 @@
+skill_id: skill_table_designer
+name: Table Designer
+description: Generate table schema, columns, and query configuration from natural language
+version: 1.0.0
+category: data_design
+executor: ai-pipeline
+author: aurora-team
+created_at: 2026-05-03T00:00:00Z
+updated_at: 2026-05-03T00:00:00Z
+deprecated: false
+
+tags:
+  - table
+  - schema
+  - query
+  - data_grid
+
+input_schema:
+  description:
+    type: string
+    required: true
+    description: Natural language description of the table/data view
+  source_type:
+    type: string
+    required: true
+    enum: [database, api, file, computed]
+  columns:
+    type: array
+    required: false
+    description: Explicit column definitions
+  relationships:
+    type: array
+    required: false
+    description: Foreign key or join relationships
+
+output_schema:
+  table_id:
+    type: uuid
+    required: true
+  name:
+    type: string
+    required: true
+  columns:
+    type: array
+    required: true
+  query:
+    type: object
+    required: true
+  indexes:
+    type: array
+    required: false
+  checksum:
+    type: string
+    required: true
+
+business_rules:
+  - "Table name must be unique within tenant"
+  - "Column names must be valid SQL identifiers"
+  - "Primary key must be defined"
+  - "Foreign key references must exist"
+  - "Query must not contain full table scans"
+
+security_rules:
+  - "No SELECT * in generated queries"
+  - "All queries must include tenant_id filter"
+  - "Column-level permissions mapped for each field"
+  - "SQL injection prevention via parameterized queries"
