@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Skill Telemetry & Observability
+ * Skill Telemetry &amp; Observability
  *
  * Records per-skill metrics:
  * - tokens_in / tokens_out (LLM token usage)

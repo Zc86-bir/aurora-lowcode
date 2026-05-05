@@ -18,7 +18,7 @@ import java.io.IOException;
  * All requests to /mcp/sse and /mcp/message must carry a valid JWT token
  * in the Authorization header:
  *
- *   Authorization: Bearer <jwt-token>
+ *   Authorization: Bearer &lt;jwt-token&gt;
  *
  * Without valid token, returns 401 Unauthorized.
  * This ensures only authenticated AI clients (Cursor, Claude Desktop, etc.)

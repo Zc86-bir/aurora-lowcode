@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
  * Supported mask types: ID_CARD, PHONE, EMAIL, BANK_CARD, NAME, ADDRESS, CUSTOM
  *
  * Example:
+ * <pre>{@code
  *   public class UserResponse {
  *       @Mask(type = Mask.MaskType.PHONE)
  *       private String phoneNumber;
@@ -39,6 +40,7 @@ import java.util.regex.Pattern;
  *       @Mask(type = Mask.MaskType.EMAIL)
  *       private String email;
  *   }
+ * }</pre>
  */
 @RestControllerAdvice
 public class DataMaskingInterceptor implements ResponseBodyAdvice<Object> {

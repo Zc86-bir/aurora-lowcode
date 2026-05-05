@@ -12,7 +12,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.time.Duration;
 
 /**
- * Frontend Cache Strategy — Production-grade CDN & browser caching.
+ * Frontend Cache Strategy — Production-grade CDN &amp; browser caching.
  *
  * Implements the Vite 6 asset fingerprinting caching strategy:
  * - /index.html → NO cache (must-revalidate, ensures instant updates on deploy)
