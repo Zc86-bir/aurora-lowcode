@@ -49,7 +49,8 @@ curl http://localhost:8080/actuator/health
 export DATABASE_PASSWORD=your_secure_db_password
 export REDIS_PASSWORD=your_secure_redis_password
 export JWT_SECRET=your_jwt_secret_min_32_chars
-export MINIO_SECRET_KEY=your_minio_secret_key
+export OSS_ACCESS_KEY_ID=your_oss_access_key_id
+export OSS_ACCESS_KEY_SECRET=your_oss_access_key_secret
 
 # 一键启动
 make docker-up
@@ -210,14 +211,15 @@ java $JAVA_OPTS -jar target/*.jar
 helm upgrade --install aurora ./deploy/helm/aurora \
   --set backup.enabled=true \
   --set backup.schedule="0 2 * * *" \
-  --set minio.secretKey=your_minio_key \
+  --set oss.accessKeyId=your_oss_access_key_id \
+  --set oss.accessKeySecret=your_oss_access_key_secret \
   --namespace aurora --create-namespace
 ```
 
 **备份流程**：
 1. 每天凌晨 2:00 UTC，CronJob 启动
 2. 使用 `pg_dump --format=custom --compress=9` 导出数据库
-3. 通过 `mc` (MinIO Client) 上传到 MinIO `aurora-backups` 桶
+3. 通过 `ossutil` 上传到阿里云 OSS `aurora-backups` 桶
 4. 保留最近 30 天备份，自动清理旧文件
 
 **查看备份状态**：
@@ -227,7 +229,7 @@ kubectl get cronjob aurora-db-backup -n aurora
 kubectl get jobs --selector=app.kubernetes.io/component=backup -n aurora
 
 # 查看备份文件
-mc ls minio/aurora-backups/
+ossutil ls oss://aurora-backups/
 ```
 
 **手动触发备份**：

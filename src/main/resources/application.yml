@@ -136,6 +136,16 @@ aurora:
       connection-properties:
         url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:aurora}
 
+  # ====================
+  # Object Storage (Alibaba Cloud OSS)
+  # ====================
+  storage:
+    oss:
+      endpoint: ${OSS_ENDPOINT:oss-cn-shanghai.aliyuncs.com}
+      bucket-name: ${OSS_BUCKET:oss-pai-u82tw4nq4i868aeb88-cn-shanghai}
+      access-key-id: ${OSS_ACCESS_KEY_ID}
+      access-key-secret: ${OSS_ACCESS_KEY_SECRET}
+
   code-generator:
     java:
       base-package: ${CODE_GEN_PACKAGE:com.aurora}

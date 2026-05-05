@@ -598,8 +598,9 @@ mvn spring-boot:run     # 启动后端（新终端）
 export DATABASE_PASSWORD=your_secret
 export REDIS_PASSWORD=your_redis_secret
 export JWT_SECRET=your_jwt_secret_min_32_chars
-export MINIO_SECRET_KEY=your_minio_secret
-make docker-up          # 一键启动 Aurora + PostgreSQL + Redis + MinIO
+export OSS_ACCESS_KEY_ID=your_oss_access_key_id
+export OSS_ACCESS_KEY_SECRET=your_oss_access_key_secret
+make docker-up          # 一键启动 Aurora + PostgreSQL + Redis + OSS
 
 # 方式三：完整验证
 ./scripts/verify.sh     # 检查所有端点、Skill、数据库、审计链
@@ -625,14 +626,15 @@ make docker-up          # 一键启动 Aurora + PostgreSQL + Redis + MinIO
 export DATABASE_PASSWORD=your_secret
 export REDIS_PASSWORD=your_redis_secret
 export JWT_SECRET=your_jwt_secret
-export MINIO_SECRET_KEY=your_minio_secret
+export OSS_ACCESS_KEY_ID=your_oss_access_key_id
+export OSS_ACCESS_KEY_SECRET=your_oss_access_key_secret
 export GRAFANA_PASSWORD=your_grafana_password
 
 docker compose -f docker-compose.prod.yml up -d
 ```
-**生产栈**：Aurora + PostgreSQL 17 + Redis 7 + MinIO + Prometheus + Grafana + Tempo + Loki + Promtail
+**生产栈**：Aurora + PostgreSQL 17 + Redis 7 + OSS + Prometheus + Grafana + Tempo + Loki + Promtail
 - 仅暴露应用端口（8080）+ 可观测性端口（9090/3000）
-- PostgreSQL/Redis/MinIO/Loki 仅内部网络可达
+- PostgreSQL/Redis/Loki 仅内部网络可达
 - 健康检查 + 资源限制 + 优雅停机（1m timeout）
 
 #### Kubernetes (Helm)

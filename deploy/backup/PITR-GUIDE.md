@@ -67,15 +67,15 @@ pg1-path = /var/lib/postgresql/data
 pg1-port = 5432
 pg1-user = aurora
 
-# MinIO as backup storage (S3-compatible)
+# Alibaba Cloud OSS as backup storage (S3-compatible)
 repo1-type = s3
 repo1-path = /aurora-backups
-repo1-region = us-east-1
-repo1-endpoint = aurora-minio:9000
-repo1-s3-uri-style = path
-repo1-s3-key = minioadmin
-repo1-s3-key-secret = your_minio_secret
-repo1-s3-tls = false
+repo1-region = oss-cn-shanghai
+repo1-endpoint = oss-cn-shanghai.aliyuncs.com
+repo1-s3-uri-style = virtual
+repo1-s3-key = your-oss-access-key-id
+repo1-s3-key-secret = your-oss-access-key-secret
+repo1-s3-tls = true
 
 # Retention
 repo1-retention-full = 30
@@ -179,11 +179,11 @@ backup:
     encryption:
       enabled: true
       cipherPass: ${PGBACKREST_CIPHER_PASS}
-    minio:
-      endpoint: "http://aurora-minio:9000"
-      bucket: "aurora-backups"
-      accessKey: ${MINIO_ACCESS_KEY}
-      secretKey: ${MINIO_SECRET_KEY}
+    oss:
+      endpoint: "oss-cn-shanghai.aliyuncs.com"
+      bucket: "oss-pai-u82tw4nq4i868aeb88-cn-shanghai"
+      accessKeyId: ${OSS_ACCESS_KEY_ID}
+      accessKeySecret: ${OSS_ACCESS_KEY_SECRET}
 ```
 
 ## Monitoring
