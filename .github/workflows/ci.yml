@@ -46,7 +46,7 @@ jobs:
         run: mvn -B test -DskipITs -Djacoco.skip=true -DskipSpringdoc=true
 
       - name: Run Integration Tests
-        run: mvn -B verify -DskipUTs -Djacoco.skip=true -DskipSpringdoc=true -Dspotbugs.skip=true
+        run: mvn -B verify -DskipUTs -Djacoco.skip=true -DskipSpringdoc=true -Dspotbugs.skip=true -Ddependency-check.skip=true
 
       - name: Upload test results
         if: always()
