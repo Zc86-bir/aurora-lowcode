@@ -1061,7 +1061,6 @@
                 <version>${dependency-check.version}</version>
                 <configuration>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
-                    <failBuildOnError>false</failBuildOnError>
                     <ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
                     <suppressionFiles>
                         <suppressionFile>src/main/resources/security/suppressions.xml</suppressionFile>
