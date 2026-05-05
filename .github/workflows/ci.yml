@@ -94,6 +94,8 @@ jobs:
     name: OWASP Dependency Check
     runs-on: ubuntu-latest
     needs: build
+    env:
+      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -115,22 +117,18 @@ jobs:
 
       - name: Verify NVD API Key availability
         run: |
-          if [ -z "${{ secrets.NVD_API_KEY }}" ]; then
-            echo "::warning::secrets.NVD_API_KEY is empty. If this is a fork PR, secrets are not available to fork workflows."
-            echo "::warning::OWASP NVD update will be very slow without an API key."
+          if [ -z "$NVD_API_KEY" ]; then
+            echo "::error::NVD_API_KEY is empty. Please check repository secrets."
+            echo "::error::Go to Settings > Secrets and variables > Actions > Repository secrets"
+            echo "::error::Ensure a secret named 'NVD_API_KEY' exists."
+            exit 1
           else
-            echo "::notice::secrets.NVD_API_KEY is present (length ${#KEY})."
+            echo "::notice::NVD_API_KEY is present (length ${#NVD_API_KEY})."
           fi
-        env:
-          KEY: ${{ secrets.NVD_API_KEY }}
 
       - name: Run OWASP Dependency Check
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
-          if [ -z "$NVD_API_KEY" ]; then
-            echo "::warning::Running OWASP without NVD API key. This may take 15-30 minutes."
-          fi
+          echo "Running OWASP with NVD API key..."
           mvn -B org.owasp:dependency-check-maven:check \
             -DskipTests -DfailBuildOnCVSS=7 -DskipSpringdoc=true \
             -DnvdApiKey="$NVD_API_KEY"
