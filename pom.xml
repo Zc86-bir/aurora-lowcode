@@ -933,8 +933,7 @@
                 <configuration>
                     <effort>Max</effort>
                     <threshold>Low</threshold>
-                    <!-- TODO: failOnError=false for now due to 345 SpotBugs issues (many are record-generated false positives). Set to true after adding proper exclude rules. -->
-                    <failOnError>false</failOnError>
+                    <failOnError>true</failOnError>
                     <excludeFilterFile>src/main/resources/spotbugs-exclude.xml</excludeFilterFile>
                 </configuration>
                 <dependencies>
