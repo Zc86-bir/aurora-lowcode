@@ -787,6 +787,9 @@
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-maven-plugin</artifactId>
                 <version>1.4</version>
+                <configuration>
+                    <skip>${skipSpringdoc}</skip>
+                </configuration>
                 <executions>
                     <execution>
                         <id>generate-openapi-docs</id>
@@ -798,7 +801,6 @@
                             <apiDocsUrl>http://localhost:8080/v3/api-docs.yaml</apiDocsUrl>
                             <outputFileName>api-docs.yaml</outputFileName>
                             <outputDir>${project.basedir}/frontend/src/api</outputDir>
-                            <skip>${skipSpringdoc}</skip>
                         </configuration>
                     </execution>
                 </executions>
