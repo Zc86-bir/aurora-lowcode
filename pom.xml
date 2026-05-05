@@ -121,7 +121,7 @@
         <mockito.version>5.14.2</mockito.version>
 
         <!-- Static Analysis -->
-        <spotbugs.version>4.9.0</spotbugs.version>
+        <spotbugs.version>4.9.3</spotbugs.version>
         <jacoco.version>0.8.13</jacoco.version>
         <checkstyle.version>10.23.0</checkstyle.version>
         <pmd.version>7.12.0</pmd.version>
@@ -144,7 +144,7 @@
         <maven-install-plugin.version>3.1.4</maven-install-plugin.version>
         <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
         <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
-        <spotbugs-maven-plugin.version>4.9.0.0</spotbugs-maven-plugin.version>
+        <spotbugs-maven-plugin.version>4.9.3.0</spotbugs-maven-plugin.version>
         <jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
 
         <!-- Skip Flags -->
@@ -1252,6 +1252,19 @@
     <!-- ================================================================== -->
 
     <repositories>
+        <!-- 阿里云公共仓库（优先，国内加速） -->
+        <repository>
+            <id>aliyunmaven</id>
+            <name>阿里云公共仓库</name>
+            <url>https://maven.aliyun.com/repository/public</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <!-- Spring Milestones（阿里云未代理时使用） -->
         <repository>
             <id>spring-milestones</id>
             <name>Spring Milestones</name>
@@ -1260,6 +1273,7 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
+        <!-- Spring Snapshots（阿里云未代理时使用） -->
         <repository>
             <id>spring-snapshots</id>
             <name>Spring Snapshots</name>
@@ -1268,6 +1282,7 @@
                 <enabled>false</enabled>
             </releases>
         </repository>
+        <!-- Maven Central 备用 -->
         <repository>
             <id>maven-central</id>
             <name>Maven Central</name>
@@ -1276,6 +1291,19 @@
     </repositories>
 
     <pluginRepositories>
+        <!-- 阿里云插件仓库（优先，国内加速） -->
+        <pluginRepository>
+            <id>aliyunmaven</id>
+            <name>阿里云公共仓库</name>
+            <url>https://maven.aliyun.com/repository/public</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </pluginRepository>
+        <!-- Spring Milestones（阿里云未代理时使用） -->
         <pluginRepository>
             <id>spring-milestones</id>
             <name>Spring Milestones</name>
@@ -1284,6 +1312,7 @@
                 <enabled>false</enabled>
             </snapshots>
         </pluginRepository>
+        <!-- Spring Snapshots（阿里云未代理时使用） -->
         <pluginRepository>
             <id>spring-snapshots</id>
             <name>Spring Snapshots</name>
