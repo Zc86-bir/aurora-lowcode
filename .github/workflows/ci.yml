@@ -113,10 +113,27 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-owasp-
 
+      - name: Verify NVD API Key availability
+        run: |
+          if [ -z "${{ secrets.NVD_API_KEY }}" ]; then
+            echo "::warning::secrets.NVD_API_KEY is empty. If this is a fork PR, secrets are not available to fork workflows."
+            echo "::warning::OWASP NVD update will be very slow without an API key."
+          else
+            echo "::notice::secrets.NVD_API_KEY is present (length ${#KEY})."
+          fi
+        env:
+          KEY: ${{ secrets.NVD_API_KEY }}
+
       - name: Run OWASP Dependency Check
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: mvn -B org.owasp:dependency-check-maven:check -DskipTests -DfailBuildOnCVSS=7 -DskipSpringdoc=true -DnvdApiKey=${{ secrets.NVD_API_KEY }}
+        run: |
+          if [ -z "$NVD_API_KEY" ]; then
+            echo "::warning::Running OWASP without NVD API key. This may take 15-30 minutes."
+          fi
+          mvn -B org.owasp:dependency-check-maven:check \
+            -DskipTests -DfailBuildOnCVSS=7 -DskipSpringdoc=true \
+            -DnvdApiKey="$NVD_API_KEY"
 
       - name: Upload dependency check report
         if: always()
