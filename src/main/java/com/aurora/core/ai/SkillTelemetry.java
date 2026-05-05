@@ -150,6 +150,18 @@ public class SkillTelemetry {
     }
 
     /**
+     * Record LLM call outcome (used by LlmGatewayService).
+     */
+    public void recordLlmCall(String provider, Duration duration, boolean success) {
+        if (success) {
+            skillSuccessCounter.increment();
+        } else {
+            skillFailureCounter.increment();
+        }
+        skillLatencyTimer.record(duration);
+    }
+
+    /**
      * Get per-skill statistics.
      */
     public SkillStats getSkillStats(String skillId) {

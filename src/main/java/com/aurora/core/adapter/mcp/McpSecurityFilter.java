@@ -1,5 +1,7 @@
 package com.aurora.core.adapter.mcp;
 
+import com.aurora.core.contract.TenantContext;
+import com.aurora.core.infrastructure.security.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,22 +9,25 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 
 /**
- * JWT Authentication Filter for MCP Endpoints
+ * JWT Authentication Filter for MCP Endpoints.
  *
- * All requests to /mcp/sse and /mcp/message must carry a valid JWT token
- * in the Authorization header:
+ * <p>All requests to {@code /mcp/sse} and {@code /mcp/message} must carry a valid
+ * JWT token in the {@code Authorization: Bearer <token>} header.
  *
- *   Authorization: Bearer &lt;jwt-token&gt;
- *
- * Without valid token, returns 401 Unauthorized.
- * This ensures only authenticated AI clients (Cursor, Claude Desktop, etc.)
- * can access the MCP tools.
+ * <p>Validates token via {@link JwtTokenProvider}, extracts tenant/user context,
+ * and populates both SecurityContext and TenantContext.
  */
 @Component
 public class McpSecurityFilter extends OncePerRequestFilter {
@@ -31,22 +36,27 @@ public class McpSecurityFilter extends OncePerRequestFilter {
 
     private static final String MCP_SSE_PATH = "/mcp/sse";
     private static final String MCP_MESSAGE_PATH = "/mcp/message";
+    private static final String AUTH_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
+
+    private final JwtTokenProvider tokenProvider;
+    private final TenantContext tenantContext;
 
     @Value("${aurora.mcp.auth.enabled:true}")
     private boolean authEnabled;
 
-    @Value("${aurora.mcp.auth.header:Authorization}")
-    private String authHeader;
-
-    @Value("${aurora.mcp.auth.prefix:Bearer }")
-    private String authPrefix;
+    public McpSecurityFilter(JwtTokenProvider tokenProvider,
+                             TenantContext tenantContext) {
+        this.tokenProvider = tokenProvider;
+        this.tenantContext = tenantContext;
+    }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return authEnabled
-            && !path.startsWith(MCP_SSE_PATH)
-            && !path.startsWith(MCP_MESSAGE_PATH);
+        return !authEnabled
+            || (!path.startsWith(MCP_SSE_PATH)
+                && !path.startsWith(MCP_MESSAGE_PATH));
     }
 
     @Override
@@ -55,103 +65,68 @@ public class McpSecurityFilter extends OncePerRequestFilter {
                                      FilterChain filterChain)
             throws ServletException, IOException {
 
-        // If auth is disabled, allow all requests (development only)
         if (!authEnabled) {
-            log.warn("MCP authentication is DISABLED - this should NOT be used in production");
+            log.warn("MCP authentication is DISABLED — do NOT use in production");
             filterChain.doFilter(request, response);
             return;
         }
 
-        String authHeader = request.getHeader(this.authHeader);
-        if (authHeader == null || authHeader.isEmpty()) {
-            sendUnauthorized(response, "Missing Authorization header");
+        String authHeader = request.getHeader(AUTH_HEADER);
+        if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+            sendUnauthorized(response, "Missing or invalid Authorization header");
             return;
         }
 
-        if (!authHeader.startsWith(authPrefix)) {
-            sendUnauthorized(response, "Authorization header must start with 'Bearer '");
-            return;
-        }
-
-        String token = authHeader.substring(authPrefix.length()).trim();
+        String token = authHeader.substring(BEARER_PREFIX.length()).trim();
         if (token.isEmpty()) {
             sendUnauthorized(response, "Empty JWT token");
             return;
         }
 
-        // Validate JWT token
         try {
-            if (!isValidToken(token)) {
+            if (!tokenProvider.validateToken(token)) {
                 sendUnauthorized(response, "Invalid or expired JWT token");
                 return;
             }
 
-            // Extract tenant ID from token for tenant-scoped tool execution
-            String tenantId = extractTenantId(token);
-            if (tenantId != null) {
-                request.setAttribute("X-Tenant-Id", tenantId);
+            UUID userId = tokenProvider.extractUserId(token);
+            UUID tenantId = tokenProvider.extractTenantId(token);
+            String roles = tokenProvider.extractRoles(token);
+
+            if (userId == null || tenantId == null) {
+                sendUnauthorized(response, "Missing userId or tenantId in token");
+                return;
             }
 
-            // Extract user ID from token
-            String userId = extractUserId(token);
-            if (userId != null) {
-                request.setAttribute("X-User-Id", userId);
-            }
+            // Populate Spring SecurityContext
+            List<SimpleGrantedAuthority> authorities = Arrays.stream(
+                    roles.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                    .toList();
+
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            userId.toString(), null, authorities);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            // Populate TenantContext for downstream use
+            tenantContext.setContext(tenantId, userId);
+
+            // Set request attributes for MCP tool execution
+            request.setAttribute("X-Tenant-Id", tenantId.toString());
+            request.setAttribute("X-User-Id", userId.toString());
 
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
-            log.error("JWT validation failed: {}", e.getMessage());
-            sendUnauthorized(response, "JWT validation failed: " + e.getMessage());
+            log.error("MCP JWT validation failed: {}", e.getMessage());
+            sendUnauthorized(response, "JWT validation failed");
+        } finally {
+            SecurityContextHolder.clearContext();
+            tenantContext.clearContext();
         }
-    }
-
-    /**
-     * Validate JWT token.
-     *
-     * In production: integrate with your JWT provider (e.g., JJWT, Spring Security OAuth2).
-     * This implementation delegates to the application's JWT validation service.
-     */
-    private boolean isValidToken(String token) {
-        // TODO: Replace with actual JWT validation logic
-        // Example using JJWT:
-        //   try {
-        //       Jwts.parserBuilder()
-        //           .setSigningKey(secretKey)
-        //           .build()
-        //           .parseClaimsJws(token);
-        //       return true;
-        //   } catch (JwtException e) {
-        //       return false;
-        //   }
-        return token.length() > 10; // Placeholder: accept any non-empty token
-    }
-
-    /**
-     * Extract tenant ID from JWT claims.
-     *
-     * Expected claim: "tenant_id" (UUID string)
-     */
-    private String extractTenantId(String token) {
-        // TODO: Extract from JWT claims
-        // Example:
-        //   Claims claims = Jwts.parserBuilder()
-        //       .setSigningKey(secretKey)
-        //       .build()
-        //       .parseClaimsJws(token)
-        //       .getBody();
-        //   return claims.get("tenant_id", String.class);
-        return null;
-    }
-
-    /**
-     * Extract user ID from JWT claims.
-     *
-     * Expected claim: "sub" (subject = user ID)
-     */
-    private String extractUserId(String token) {
-        // TODO: Extract from JWT claims
-        return null;
     }
 
     private void sendUnauthorized(HttpServletResponse response, String message)
@@ -159,7 +134,7 @@ public class McpSecurityFilter extends OncePerRequestFilter {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
         response.getWriter().write(
-            String.format("{\"error\":\"unauthorized\",\"message\":\"%s\"}", message)
-        );
+            String.format("{\"error\":\"unauthorized\",\"message\":\"%s\"}",
+                    message));
     }
 }

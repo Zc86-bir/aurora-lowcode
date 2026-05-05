@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
   const isProd = mode === 'production'
   const API_BASE = env.VITE_API_BASE || 'http://localhost:8080'
 
-export default defineConfig({
+  return {
   plugins: [
     VueRouter({
       routesFolder: 'src/views',
@@ -146,4 +146,5 @@ export default defineConfig({
   html: {
     cspNonce: isProd ? '__VITE_CSP_NONCE__' : undefined,
   },
+  }
 })

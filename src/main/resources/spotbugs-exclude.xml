@@ -176,4 +176,19 @@
         <Class name="~com\.aurora\.core\.runtime\.WorkflowRuntimeEngine"/>
     </Match>
 
+    <!-- ================================================================== -->
+    <!-- Jackson DTOs: UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD              -->
+    <!-- Fields are written by Jackson deserialization via reflection        -->
+    <!-- ================================================================== -->
+    <Match>
+        <Bug pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
+        <Class name="~com\.aurora\.core\.adapter\.web\.AuthController\$LoginRequest"/>
+    </Match>
+
+    <!-- CT_CONSTRUCTOR_THROW: Intentional fail-fast validation in JwtTokenProvider -->
+    <Match>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+        <Class name="~com\.aurora\.core\.infrastructure\.security\.JwtTokenProvider"/>
+    </Match>
+
 </FindBugsFilter>

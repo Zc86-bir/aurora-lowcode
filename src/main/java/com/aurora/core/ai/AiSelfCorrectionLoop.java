@@ -2,6 +2,7 @@ package com.aurora.core.ai;
 
 import com.aurora.core.contract.AIPipeline;
 import com.aurora.core.contract.AuditLogger;
+import com.aurora.core.infrastructure.ai.LlmGatewayService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,19 +34,22 @@ public class AiSelfCorrectionLoop {
     private final AuditLogger auditLogger;
     private final SkillTelemetry telemetry;
     private final FallbackStrategy fallbackStrategy;
+    private final LlmGatewayService llmGateway;
 
     public AiSelfCorrectionLoop(JsonSchemaValidator schemaValidator,
                                  AstSyntaxFirewall astFirewall,
                                  BusinessRuleEngine ruleEngine,
                                  AuditLogger auditLogger,
                                  SkillTelemetry telemetry,
-                                 FallbackStrategy fallbackStrategy) {
+                                 FallbackStrategy fallbackStrategy,
+                                 LlmGatewayService llmGateway) {
         this.schemaValidator = schemaValidator;
         this.astFirewall = astFirewall;
         this.ruleEngine = ruleEngine;
         this.auditLogger = auditLogger;
         this.telemetry = telemetry;
         this.fallbackStrategy = fallbackStrategy;
+        this.llmGateway = llmGateway;
     }
 
     /**
@@ -130,12 +134,41 @@ public class AiSelfCorrectionLoop {
 
     /**
      * Request LLM to correct its output with error context.
+     *
+     * <p>Builds a correction prompt that includes the previous output,
+     * the validation errors, and asks the LLM to fix the issues.
+     * Uses {@link LlmGatewayService} for circuit-breaker-protected calls.
      */
-    private String requestCorrection(String previousOutput, List<String> errorHistory, String skillId) {
-        // In production: call LLM API with correction prompt
-        // For now: return placeholder
-        log.info("Requesting correction for skill {}, errors: {}", skillId, errorHistory.getLast());
-        return previousOutput;
+    private String requestCorrection(String previousOutput,
+                                     List<String> errorHistory,
+                                     String skillId) {
+        String correctionPrompt = buildCorrectionPrompt(previousOutput, errorHistory, skillId);
+        try {
+            String corrected = llmGateway.retryWithBackoff(correctionPrompt, 1);
+            log.info("LLM correction obtained for skill {}, length={}",
+                    skillId, corrected.length());
+            return corrected;
+        } catch (LlmGatewayService.LlmTimeoutException e) {
+            log.warn("LLM correction timed out for skill {}: {}", skillId, e.getMessage());
+            return previousOutput;
+        } catch (LlmGatewayService.LlmProviderException e) {
+            log.warn("LLM correction failed for skill {}: {}", skillId, e.getMessage());
+            return previousOutput;
+        }
+    }
+
+    private String buildCorrectionPrompt(String previousOutput,
+                                         List<String> errorHistory,
+                                         String skillId) {
+        return String.format(
+                "You are correcting code generation output for skill \"%s\".%n%n"
+                + "Previous output had the following validation errors:%n%s%n%n"
+                + "Previous output:%n%s%n%n"
+                + "Please fix all validation errors and return the corrected output.%n"
+                + "Ensure the output is valid JSON matching the expected schema.%n",
+                skillId,
+                String.join("%n", errorHistory),
+                previousOutput);
     }
 
     // Value types
