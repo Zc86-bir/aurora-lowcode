@@ -23,7 +23,7 @@ RUN mvn dependency:go-offline -B
 COPY src ./src
 COPY skills ./skills
 
-RUN mvn clean package -DskipTests -Djacoco.skip=true -B && \
+RUN mvn clean package -DskipTests -Djacoco.skip=true -Dmaven.javadoc.skip=true -B && \
     cp target/*.jar app.jar
 
 # ===========================
