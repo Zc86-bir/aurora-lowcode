@@ -961,16 +961,6 @@
                 </executions>
             </plugin>
 
-            <!-- Sonatype OSS Index Maven Plugin - Skip to avoid 401 errors -->
-            <plugin>
-                <groupId>org.sonatype.ossindex.maven</groupId>
-                <artifactId>ossindex-maven-plugin</artifactId>
-                <version>3.2.0</version>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-
             <!-- Maven Enforcer Plugin - disabled for development -->
             <!--
             <plugin>
@@ -1072,6 +1062,7 @@
                 <configuration>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
                     <failBuildOnError>false</failBuildOnError>
+                    <ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
                     <suppressionFiles>
                         <suppressionFile>src/main/resources/security/suppressions.xml</suppressionFile>
                     </suppressionFiles>
@@ -1079,7 +1070,6 @@
                         <format>JSON</format>
                         <format>HTML</format>
                     </formats>
-                    <!-- OSS Index analyzer is disabled via ossindex-maven-plugin <skip>true</skip> -->
                 </configuration>
                 <executions>
                     <execution>
