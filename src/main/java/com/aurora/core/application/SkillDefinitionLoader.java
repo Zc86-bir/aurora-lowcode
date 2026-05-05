@@ -295,7 +295,6 @@ public class SkillDefinitionLoader {
                         // It's a map item in a list - parse as nested object
                         List<Map<String, Object>> objectList = new ArrayList<>();
                         Map<String, Object> obj = new LinkedHashMap<>();
-                        int itemIndent = indent + 2;
                         // Parse the first key-value from the "- key: value"
                         int colonIdx = itemValue.indexOf(':');
                         String k = itemValue.substring(0, colonIdx).trim();
