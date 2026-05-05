@@ -1071,8 +1071,7 @@
                         <format>JSON</format>
                         <format>HTML</format>
                     </formats>
-                    <!-- Disable OSS Index analyzer to avoid 401 errors without credentials -->
-                    <ossIndexAnalyzerEnabled>false</ossIndexAnalyzerEnabled>
+                    <!-- OSS Index analyzer is disabled via ossindex-maven-plugin <skip>true</skip> -->
                 </configuration>
                 <executions>
                     <execution>
