@@ -40,6 +40,7 @@
   "devDependencies": {
     "@antfu/eslint-config": "^3.0.0",
     "@hey-api/openapi-ts": "^0.60.0",
+    "@originjs/vite-plugin-federation": "^1.4.1",
     "@types/node": "^22.0.0",
     "@vitejs/plugin-vue": "^5.1.0",
     "@vitejs/plugin-vue-jsx": "^4.0.0",

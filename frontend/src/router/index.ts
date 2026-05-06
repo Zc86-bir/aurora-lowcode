@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { getEnabledRemotes } from '@/core/RemoteRegistry'
 
-const routes: RouteRecordRaw[] = [
+const coreRoutes: RouteRecordRaw[] = [
   {
     path: '/login',
     name: 'Login',
@@ -41,6 +42,25 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
+]
+
+// Remote extension routes — loaded from static registry
+const remoteRoutes: RouteRecordRaw[] = getEnabledRemotes().map((remote) => ({
+  path: `/${remote.routeBase}`,
+  name: `remote:${remote.remoteId}`,
+  component: () => import(/* @vite-ignore */ remote.entryUrl).catch(() => ({
+    template: '<div class="error-state">Remote module failed to load</div>'
+  })),
+  meta: {
+    requiresAuth: true,
+    remoteId: remote.remoteId,
+    requiredCapabilities: remote.requiredCapabilities,
+  },
+}))
+
+const routes: RouteRecordRaw[] = [
+  ...coreRoutes,
+  ...remoteRoutes,
   {
     path: '/:pathMatch(.*)*',
     redirect: '/dashboard',

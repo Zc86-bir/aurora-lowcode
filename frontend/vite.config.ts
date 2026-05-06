@@ -1,6 +1,7 @@
 // frontend/vite.config.ts
 // Aurora Low-Code Platform — Vite 6 Configuration
 // Features: chunk splitting, preload/prefetch, CSP compliance, performance budgets
+// Module Federation host: trusted remote extensions via static registry
 
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -8,6 +9,7 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import VueRouter from 'unplugin-vue-router/vite'
 import UnoCSS from 'unocss/vite'
 import Components from 'unplugin-vue-components/vite'
+import federation from '@originjs/vite-plugin-federation'
 import AutoImport from 'unplugin-auto-import/vite'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { compression } from 'vite-plugin-compression2'
@@ -50,6 +52,18 @@ export default defineConfig(({ mode }) => {
       open: false,
       gzipSize: true,
       brotliSize: true,
+    }),
+    // Module Federation host — static remote extensions
+    federation({
+      name: 'aurora-host',
+      remotes: {},
+      shared: {
+        vue: { singleton: true },
+        'vue-router': { singleton: true },
+        pinia: { singleton: true },
+        'vue-i18n': { singleton: true },
+        '@tanstack/vue-query': { singleton: true },
+      },
     }),
   ].filter(Boolean),
 
