@@ -1248,7 +1248,21 @@ WebhookSigner.verify(payload, secret, signature);  // constant-time equals
 
 **Resilience4j 配置**（`application.yml`）：
 - `llmGateway`：滑动窗口 10，最小调用 3，失败率阈值 50%，打开状态等待 10s
-- `webhookDispatcher`：重试 3 次，间隔 1s
+- `webhookDispatcher`：重试 3 次，间隔 1s（程序化配置，仅 IOException/ConnectException/HttpTimeoutException）
+
+### 14.5 审查修复记录
+
+| 严重级别 | 修复项 | 新增文件 |
+|----------|--------|----------|
+| CRITICAL | SSRF 防护 | `UrlValidator.java` — 阻止私有/回环/链路本地 IP、AWS IMDS、GCP metadata |
+| CRITICAL | Webhook 密钥加密存储 | `WebhookSecretEncryptor.java` — AES-256-GCM，存储格式 `AES:base64(IV+ciphertext)` |
+| CRITICAL | 事务 readOnly 修复 | `ApiKeyService.java` — validateApiKey 移除 readOnly=true |
+| CRITICAL | 签名常量时间比较 | `WebhookSigner.java` — XOR-based，无 early return |
+| CRITICAL | 外部端点认证 | `SecurityFilterChainConfig.java` — /api/v1/external/** → authenticated() |
+| HIGH | HTTP 重定向禁用 | `WebhookDispatcher.java` — followRedirects(NEVER) |
+| HIGH | 重试异常过滤 | `WebhookDispatcher.java` — 仅重试 IOException/ConnectException/HttpTimeoutException |
+| HIGH | 计数器并发安全 | `WebhookDispatcher.java` — 捕获 OptimisticLockException |
+| HIGH | 死 YAML 配置清理 | `application.yml` — 移除未使用的 webhookDispatcher retry 实例 |
 
 ---
 
@@ -1256,7 +1270,7 @@ WebhookSigner.verify(payload, secret, signature);  // constant-time equals
 
 | 指标 | 数值 |
 |------|------|
-| Java 后端文件 | 80 |
+| Java 后端文件 | 87 |
 | 前端文件 | 34 |
 | Skill YAML | 13（10 JeecgBoot + 3 通用） |
 | Flyway 迁移 | 5（V1-V5） |
@@ -1270,8 +1284,8 @@ WebhookSigner.verify(payload, secret, signature);  // constant-time equals
 | Nginx 配置 | 1（deploy/nginx-local.conf） |
 | Prompt 模板 | 2 |
 | ADR 文档 | 4 |
-| 审查报告 | 12 |
-| **总计** | **~175** |
+| 审查报告 | 13（含 PHASE 9 审查修复） |
+| **总计** | **~180** |
 ### 代码统计
 
 | 特性 | 数量 |
