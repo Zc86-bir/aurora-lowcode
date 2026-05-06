@@ -22,6 +22,8 @@ pnpm generate:api:remote           # regenerate API client from running backend
 
 # Infrastructure
 docker compose -f docker-compose.dev.yml up -d   # PostgreSQL + Redis
+scripts\nginx.bat start                           # nginx reverse proxy on :8088
+scripts\nginx.bat stop                            # stop nginx
 ```
 
 ## Java 25 Red Lines
