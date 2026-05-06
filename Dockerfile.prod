@@ -24,7 +24,7 @@ COPY src ./src
 COPY skills ./skills
 
 RUN mvn clean package -DskipTests -Djacoco.skip=true -Dmaven.javadoc.skip=true -Dmaven.source.skip=true -DskipSpringdoc=true -B && \
-    cp target/*.jar app.jar
+    cp target/*-exec.jar app.jar
 
 # ===========================
 # Stage 2: Runtime
