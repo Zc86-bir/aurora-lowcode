@@ -16,7 +16,41 @@ test.describe('SaaS Console', () => {
     await page.addInitScript(() => {
       localStorage.setItem('auth_token', 'mock-jwt-token-for-e2e')
       localStorage.setItem('tenant_id', '00000000-0000-0000-0000-000000000001')
+
+      // Deterministic metadata mocking at fetch layer (more reliable in CI than route-only mocks)
+      const originalFetch = window.fetch.bind(window)
+      window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+        const rawUrl = typeof input === 'string'
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : input.url
+
+        if (rawUrl.includes('/api/v1/metadata')) {
+          const parsed = new URL(rawUrl, window.location.origin)
+          const categoryParam = (parsed.searchParams.get('category') || '').toLowerCase()
+          const typeParam = (parsed.searchParams.get('type') || '').toLowerCase()
+          const category = categoryParam || (typeParam.includes('workflow') ? 'workflow' : typeParam.includes('report') ? 'report' : 'form')
+
+          return new Response(JSON.stringify([
+            {
+              id: '1',
+              name: `Sample ${category}`,
+              type: category.toUpperCase(),
+              version: 1,
+              status: 'PUBLISHED',
+              createdAt: new Date().toISOString(),
+            },
+          ]), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        }
+
+        return originalFetch(input, init)
+      }
     })
+
     // Mock metadata API for all categories
     await page.route('**/api/v1/metadata*', async (route) => {
       const url = route.request().url()
