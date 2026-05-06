@@ -42,6 +42,13 @@ export interface A11yReport {
   duration: number
 }
 
+function normalizeAxeTarget(target: unknown): string[] {
+  if (Array.isArray(target)) {
+    return target.flatMap(item => normalizeAxeTarget(item))
+  }
+  return target == null ? [] : [String(target)]
+}
+
 export class A11yTestRunner {
   private axeConfig: Partial<Spec> = {
     branding: {
@@ -77,7 +84,7 @@ export class A11yTestRunner {
       helpUrl: v.helpUrl,
       nodes: v.nodes.map(n => ({
         html: n.html,
-        target: n.target,
+        target: normalizeAxeTarget(n.target),
         failureSummary: n.failureSummary ?? '',
       })),
     }))
@@ -112,7 +119,7 @@ export class A11yTestRunner {
         helpUrl: v.helpUrl,
         nodes: v.nodes.map(n => ({
           html: n.html,
-          target: n.target,
+          target: normalizeAxeTarget(n.target),
           failureSummary: n.failureSummary ?? '',
         })),
       })),

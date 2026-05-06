@@ -44,7 +44,7 @@ import BpmnViewer from '@/components/workflow/BpmnViewer.vue'
 
 const { t } = useI18n()
 
-interface WorkflowItem {
+interface WorkflowItem extends Record<string, unknown> {
   id: string
   name: string
   type: string
@@ -89,7 +89,7 @@ const workflows = computed(() => data.value || [])
 const diagramItem = ref<WorkflowItem | null>(null)
 
 function refresh() { refetch() }
-function viewDiagram(row: WorkflowItem) { diagramItem.value = row }
+function viewDiagram(row: Record<string, unknown>) { diagramItem.value = row as WorkflowItem }
 </script>
 
 <style scoped>

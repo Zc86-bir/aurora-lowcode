@@ -139,8 +139,10 @@ interface ColumnDef {
   format?: 'date' | 'currency' | 'number' | 'percentage' | 'custom'
 }
 
+type TableRow = Record<string, unknown>
+
 interface Props {
-  data: Array<Record<string, unknown>>
+  data: TableRow[]
   columns: ColumnDef[]
   title?: string
   searchPlaceholder?: string
@@ -170,7 +172,7 @@ const visibleColumnDefs = computed(() =>
 )
 
 const filteredRows = computed(() => {
-  let rows = [...props.data]
+  let rows: TableRow[] = [...props.data]
 
   // Filter
   if (searchQuery.value) {
@@ -220,7 +222,7 @@ function toggleColumn(key: string) {
   }
 }
 
-function getRowKey(row: Record<string, unknown>): string {
+function getRowKey(row: TableRow): string {
   return String(row[props.rowKey] ?? JSON.stringify(row))
 }
 

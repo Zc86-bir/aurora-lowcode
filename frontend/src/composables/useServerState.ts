@@ -54,7 +54,7 @@ export class ApiError extends Error {
 
 // ─── useGet: Server data fetching ───
 
-interface UseGetOptions<T> extends Partial<UseQueryOptions<T>> {
+type UseGetOptions<T> = Partial<UseQueryOptions<T, ApiError>> & {
   params?: Record<string, string | number | boolean>
   enabled?: Ref<boolean> | boolean
   staleTime?: number
@@ -97,8 +97,9 @@ export function useGet<T>(key: string, url: string, options?: UseGetOptions<T>) 
 
 // ─── usePost/usePut/useDelete: Mutations ───
 
-interface UseMutateOptions<TData, TVariables>
-  extends Partial<UseMutationOptions<TData, ApiError, TVariables>> {
+type MutationContext<T> = { previous?: T }
+
+type UseMutateOptions<TData, TVariables> = Partial<UseMutationOptions<TData, ApiError, TVariables, MutationContext<TData>>> & {
   invalidateKeys?: string[]
   optimisticUpdate?: (variables: TVariables) => void
   rollbackOptimistic?: (variables: TVariables, previous: TData | undefined) => void
@@ -111,7 +112,7 @@ function createMutation<TData, TVariables>(
 ) {
   const queryClient = useQueryClient()
 
-  return useMutation<TData, ApiError, TVariables>({
+  return useMutation<TData, ApiError, TVariables, MutationContext<TData>>({
     mutationFn: (variables: TVariables) =>
       apiFetch<TData>(url, {
         method,
@@ -124,8 +125,8 @@ function createMutation<TData, TVariables>(
       return { previous: undefined }
     },
     onError: (error, variables, context) => {
-      if (options?.rollbackOptimistic && context?.previous) {
-        options.rollbackOptimistic(variables, context.previous as TData)
+      if (options?.rollbackOptimistic) {
+        options.rollbackOptimistic(variables, context?.previous)
       }
     },
     onSuccess: (data) => {
@@ -191,11 +192,11 @@ export function useOptimisticMutation<TData, TVariables, TCache>(
   method: string,
   cacheKey: string,
   updateFn: (previous: TCache, variables: TVariables) => TCache,
-  options?: UseMutateOptions<TData, TVariables>
+  options?: Omit<UseMutateOptions<TData, TVariables>, 'rollbackOptimistic'>
 ) {
   const queryClient = useQueryClient()
 
-  return useMutation<TData, ApiError, TVariables>({
+  return useMutation<TData, ApiError, TVariables, MutationContext<TCache>>({
     mutationFn: (variables) =>
       apiFetch<TData>(url, {
         method,
@@ -223,6 +224,6 @@ export function useOptimisticMutation<TData, TVariables, TCache>(
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: [cacheKey] })
     },
-    ...options,
+    ...(options as Partial<UseMutationOptions<TData, ApiError, TVariables, MutationContext<TCache>>>),
   })
 }

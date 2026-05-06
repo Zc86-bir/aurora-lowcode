@@ -45,7 +45,7 @@ import DataTable from '@/components/data/DataTable.vue'
 
 const { t } = useI18n()
 
-interface ReportItem { id: string; name: string; type: string; version: number; status: string; createdAt: string }
+interface ReportItem extends Record<string, unknown> { id: string; name: string; type: string; version: number; status: string; createdAt: string }
 
 const columns = computed(() => [
   { key: 'name', label: t('common.name'), sortable: true },
@@ -74,7 +74,7 @@ const reports = computed(() => data.value || [])
 const previewItem = ref<ReportItem | null>(null)
 
 function refresh() { refetch() }
-function previewReport(row: ReportItem) { previewItem.value = row }
+function previewReport(row: Record<string, unknown>) { previewItem.value = row as ReportItem }
 </script>
 
 <style scoped>

@@ -52,7 +52,7 @@ export class ChunkOptimizer {
     // Use requestIdleCallback to avoid blocking main thread
     const idleCallback = window.requestIdleCallback || ((fn: () => void) => setTimeout(fn, 1))
     idleCallback(() => {
-      this.loadRouteComponents(route.components)
+      this.loadRouteComponents(route.components as Record<string, unknown>)
       this.prefetchedChunks.add(routeName)
     })
   }

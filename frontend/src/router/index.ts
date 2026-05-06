@@ -53,20 +53,18 @@ const router = createRouter({
 })
 
 // Navigation guard — check auth token and tenant
-router.beforeEach((to, _from, next) => {
+router.beforeEach((to) => {
   const authStore = useAuthStore()
 
   if (to.meta.requiresAuth === false) {
-    next()
-    return
+    return true
   }
 
   if (!authStore.isAuthenticated) {
-    next({ name: 'Login', query: { redirect: to.fullPath } })
-    return
+    return `/login?redirect=${encodeURIComponent(to.fullPath)}`
   }
 
-  next()
+  return true
 })
 
 export default router

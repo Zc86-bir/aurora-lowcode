@@ -36,7 +36,8 @@
             <button @click="previewItem = null" class="close-btn">✕</button>
           </div>
           <div class="modal-body">
-            <DynamicForm :schema="previewItem.content" :title="previewItem.name" @submit="previewItem = null" />
+            <DynamicForm v-if="previewItem.content" :schema="previewItem.content" :title="previewItem.name" @submit="previewItem = null" />
+            <div v-else class="empty-state">No preview schema available</div>
           </div>
         </div>
       </div>
@@ -50,17 +51,18 @@ import { useI18n } from 'vue-i18n'
 import { useGet } from '@/composables/useServerState'
 import DataTable from '@/components/data/DataTable.vue'
 import DynamicForm from '@/components/form/DynamicForm.vue'
+import type { FormSchema } from '@/types/form'
 
 const { t } = useI18n()
 
-interface FormItem {
+interface FormItem extends Record<string, unknown> {
   id: string
   name: string
   type: string
   version: number
   status: string
   createdAt: string
-  content?: Record<string, unknown>
+  content?: FormSchema
 }
 
 const columns = computed(() => [
@@ -78,7 +80,7 @@ const previewItem = ref<FormItem | null>(null)
 
 function refresh() { refetch() }
 function openCopilot() { window.dispatchEvent(new CustomEvent('copilot:open')) }
-function previewForm(row: FormItem) { previewItem.value = row }
+function previewForm(row: Record<string, unknown>) { previewItem.value = row as FormItem }
 </script>
 
 <style scoped>

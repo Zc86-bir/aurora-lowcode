@@ -4,7 +4,13 @@
 
 import * as Y from 'yjs'
 import { WebsocketProvider } from 'y-websocket'
-import { ref, type Ref, onMounted, onUnmounted } from 'vue'
+import { ref, type Ref } from 'vue'
+
+interface OfflineOperation {
+  type: 'set' | 'layout-set'
+  field: string
+  value: unknown
+}
 
 export interface CursorPosition {
   userId: string
@@ -38,7 +44,7 @@ export class CrdtSyncEngine {
   private pendingChanges: Ref<number> = ref(0)
   private lastSyncedAt: Ref<Date | null> = ref(null)
   // Offline queue
-  private offlineQueue: Array<{ type: string; data: unknown }> = []
+  private offlineQueue: OfflineOperation[] = []
   private isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true
 
   constructor(roomId: string, serverUrl?: string) {
@@ -57,9 +63,10 @@ export class CrdtSyncEngine {
       this.provider = new WebsocketProvider(wsUrl, roomId, this.doc, {
         connect: true,
       })
+    }
 
     // Event listeners
-    this.provider.on('sync', (isSynced: boolean) => {
+    this.provider?.on('sync', (isSynced: boolean) => {
       this.connected.value = isSynced
       if (isSynced) {
         this.lastSyncedAt.value = new Date()
@@ -67,11 +74,11 @@ export class CrdtSyncEngine {
       }
     })
 
-    this.provider.on('status', ({ status }: { status: string }) => {
+    this.provider?.on('status', ({ status }: { status: string }) => {
       this.connected.value = status === 'connected'
     })
 
-    this.provider.awareness.on('change', () => {
+    this.provider?.awareness.on('change', () => {
       this.peers.value = this.provider?.awareness.getStates().size ?? 0
     })
 
@@ -91,7 +98,7 @@ export class CrdtSyncEngine {
   // ─── Form Data Operations ───
 
   setFormField(field: string, value: unknown): void {
-    const op = { type: 'set', field, value }
+    const op: OfflineOperation = { type: 'set', field, value }
     if (!this.isOnline || !this.connected.value) {
       this.offlineQueue.push(op)
       return
@@ -177,11 +184,9 @@ export class CrdtSyncEngine {
     if (!this.isOnline || !this.connected.value) return
 
     // Deduplicate offline queue by field (last write wins)
-    const deduped = new Map<string, { type: string; field: string; value: unknown }>()
+    const deduped = new Map<string, OfflineOperation>()
     for (const op of this.offlineQueue) {
-      if (op.type === 'set' || op.type === 'layout-set') {
-        deduped.set(`${op.type}:${op.field}`, op as { type: string; field: string; value: unknown })
-      }
+      deduped.set(`${op.type}:${op.field}`, op)
     }
 
     for (const op of deduped.values()) {

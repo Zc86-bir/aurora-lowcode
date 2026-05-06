@@ -1,7 +1,10 @@
 // frontend/src/api/client.ts
 // API client configuration — all requests use generated SDK, no manual Axios
 
-import type { Config } from './generated/client'
+interface Config {
+  baseUrl: string
+  headers: Record<string, string>
+}
 
 // Base configuration for all API requests
 export const apiConfig: Config = {
