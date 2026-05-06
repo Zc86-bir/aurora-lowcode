@@ -9,13 +9,9 @@
       <div v-for="i in 3" :key="i" class="skeleton-row" />
     </template>
 
-    <DataTable
-      v-else-if="workflows.length"
-      :columns="columns"
-      :data="workflows"
-      :title="t('workflows.title')"
-      searchable
-    >
+    <div v-else-if="isError" class="error-state">{{ t('common.error') }}: {{ error?.message }}</div>
+
+    <DataTable v-else-if="workflows.length" :columns="columns" :data="workflows" :title="t('workflows.title')" searchable>
       <template #actions="{ row }">
         <button class="text-btn" @click="viewDiagram(row)">{{ t('workflows.viewDiagram') }}</button>
       </template>
@@ -23,7 +19,6 @@
 
     <div v-else class="empty-state">{{ t('workflows.noItems') }}</div>
 
-    <!-- Diagram modal -->
     <Teleport to="body">
       <div v-if="diagramItem" class="modal-overlay" @click.self="diagramItem = null">
         <div class="modal-content modal-wide">
@@ -32,7 +27,7 @@
             <button @click="diagramItem = null" class="close-btn">✕</button>
           </div>
           <div class="modal-body">
-            <BpmnViewer :xml="sampleBpmnXml" @loaded="onDiagramLoaded" />
+            <BpmnViewer :xml="diagramItem.bpmnXml || sampleBpmnXml" />
           </div>
         </div>
       </div>
@@ -56,14 +51,15 @@ interface WorkflowItem {
   version: number
   status: string
   createdAt: string
+  bpmnXml?: string
 }
 
-const columns = [
-  { key: 'name', label: 'Name', sortable: true },
-  { key: 'version', label: 'Version', sortable: true },
-  { key: 'status', label: 'Status', sortable: true },
-  { key: 'createdAt', label: 'Created', sortable: true },
-]
+const columns = computed(() => [
+  { key: 'name', label: t('common.name'), sortable: true },
+  { key: 'version', label: t('common.version'), sortable: true },
+  { key: 'status', label: t('common.status'), sortable: true },
+  { key: 'createdAt', label: t('common.created'), sortable: true },
+])
 
 const sampleBpmnXml = `<?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
@@ -79,29 +75,21 @@ const sampleBpmnXml = `<?xml version="1.0" encoding="UTF-8"?>
   </process>
   <bpmndi:BPMNDiagram>
     <bpmndi:BPMNPlane>
-      <bpmndi:BPMNShape id="_BPMNShape_Start_1" bpmnElement="Start_1">
-        <dc:Bounds x="156" y="82" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="_BPMNShape_Task_1" bpmnElement="Task_1">
-        <dc:Bounds x="263" y="65" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="_BPMNShape_End_1" bpmnElement="End_1">
-        <dc:Bounds x="432" y="82" width="36" height="36" />
-      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_Start_1" bpmnElement="Start_1"><dc:Bounds x="156" y="82" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_Task_1" bpmnElement="Task_1"><dc:Bounds x="263" y="65" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_End_1" bpmnElement="End_1"><dc:Bounds x="432" y="82" width="36" height="36" /></bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </definitions>`
 
-const { data, isPending, refetch } = useGet<WorkflowItem[]>('workflows', '/api/v1/metadata', {
+const { data, isPending, isError, error, refetch } = useGet<WorkflowItem[]>('workflows', '/api/v1/metadata', {
   params: { category: 'workflow', type: 'WORKFLOW' },
 })
-
 const workflows = computed(() => data.value || [])
 const diagramItem = ref<WorkflowItem | null>(null)
 
 function refresh() { refetch() }
 function viewDiagram(row: WorkflowItem) { diagramItem.value = row }
-function onDiagramLoaded() { /* BPMN rendered successfully */ }
 </script>
 
 <style scoped>
@@ -112,6 +100,7 @@ function onDiagramLoaded() { /* BPMN rendered successfully */ }
 .skeleton-row { height: 48px; background: #f3f4f6; margin-bottom: 0.5rem; border-radius: 6px; animation: pulse 1.5s infinite; }
 @keyframes pulse { 50% { opacity: 0.5; } }
 .empty-state { text-align: center; padding: 3rem; color: #9ca3af; }
+.error-state { text-align: center; padding: 2rem; color: #dc2626; }
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; display: flex; align-items: center; justify-content: center; }
 .modal-content { background: white; border-radius: 12px; max-width: 900px; width: 95%; max-height: 85vh; overflow-y: auto; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid #e5e7eb; }

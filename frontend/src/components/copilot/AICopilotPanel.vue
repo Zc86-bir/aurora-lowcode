@@ -59,7 +59,7 @@ import MarkdownIt from 'markdown-it'
 const { t } = useI18n()
 const { messages, isGenerating, sendMessage, stopGeneration, clearHistory } = useCopilotChat()
 
-const md = new MarkdownIt({ html: true, linkify: true })
+const md = new MarkdownIt({ linkify: true })
 const isOpen = ref(false)
 const inputText = ref('')
 const scrollRef = ref<HTMLElement | null>(null)

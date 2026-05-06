@@ -2,16 +2,11 @@
   <div class="settings-page">
     <h2>{{ t('settings.title') }}</h2>
     <div class="settings-layout">
-      <!-- Sidebar tabs -->
       <nav class="settings-tabs">
-        <button v-for="tab in tabs" :key="tab.key" class="tab-btn" :class="{ active: activeTab === tab.key }" @click="activeTab = tab.key">
-          {{ tab.label }}
-        </button>
+        <button v-for="tab in tabs" :key="tab.key" class="tab-btn" :class="{ active: activeTab === tab.key }" @click="activeTab = tab.key">{{ tab.label }}</button>
       </nav>
 
-      <!-- Tab content -->
       <div class="settings-content">
-        <!-- Profile -->
         <section v-if="activeTab === 'profile'">
           <h3>{{ t('settings.profile') }}</h3>
           <div class="form-group">
@@ -23,7 +18,6 @@
           </div>
         </section>
 
-        <!-- AI Models (BYOK) -->
         <section v-if="activeTab === 'ai-models'">
           <h3>{{ t('settings.aiModels') }}</h3>
           <p class="note">{{ t('settings.apiKeyNote') }}</p>
@@ -38,7 +32,6 @@
           <button class="btn-primary" @click="saveKeys">{{ t('settings.save') }}</button>
         </section>
 
-        <!-- Theme & Access -->
         <section v-if="activeTab === 'theme'">
           <h3>{{ t('settings.theme') }}</h3>
           <div class="theme-grid">
@@ -54,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { setLocale } from '@/i18n'
 
@@ -66,21 +59,22 @@ const anthropicKey = ref('')
 const openaiKey = ref('')
 const currentTheme = ref(localStorage.getItem('aurora_theme') || 'light')
 
-const tabs = [
+const tabs = computed(() => [
   { key: 'profile', label: t('settings.profile') },
   { key: 'ai-models', label: t('settings.aiModels') },
   { key: 'theme', label: t('settings.theme') },
-]
+])
 
-const themes = [
+const themes = computed(() => [
   { key: 'light', label: t('settings.themeLight'), bg: '#ffffff', fg: '#000000' },
   { key: 'dark', label: t('settings.themeDark'), bg: '#1f2937', fg: '#ffffff' },
   { key: 'high-contrast', label: t('settings.themeHighContrast'), bg: '#000000', fg: '#ffffff' },
   { key: 'colorblind', label: t('settings.themeColorblind'), bg: '#f0f4f8', fg: '#1a1a2e' },
-]
+])
 
 function switchLocale() {
   setLocale(locale.value)
+  localStorage.setItem('aurora_locale', locale.value)
 }
 
 function setTheme(theme: string) {
@@ -89,15 +83,8 @@ function setTheme(theme: string) {
   document.documentElement.setAttribute('data-theme', theme)
 }
 
-async function saveKeys() {
-  // Submit keys to backend via the api interceptor
-  // In production, use the generated SDK and submit to a secure endpoint
-  if (anthropicKey.value) {
-    localStorage.setItem('aurora_anthropic_key', anthropicKey.value)
-  }
-  if (openaiKey.value) {
-    localStorage.setItem('aurora_openai_key', openaiKey.value)
-  }
+function saveKeys() {
+  // In production, submit to secure backend BYOK endpoint via generated SDK
 }
 
 onMounted(() => {

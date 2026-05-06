@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
@@ -11,6 +11,11 @@ export function useCopilotChat() {
   const isGenerating = ref(false)
   const abortController = ref<AbortController | null>(null)
 
+  // Cleanup SSE on unmount
+  onUnmounted(() => {
+    abortController.value?.abort()
+  })
+
   function sendMessage(text: string) {
     if (!text.trim()) return
     messages.value.push({ role: 'user', content: text, timestamp: Date.now() })
@@ -19,18 +24,20 @@ export function useCopilotChat() {
     const controller = new AbortController()
     abortController.value = controller
 
-    // Use the API interceptor (which auto-injects auth headers)
     const baseUrl = import.meta.env.VITE_API_BASE || '/api/v1'
+
+    // Use fetch via apiFetch pattern (SSE requires raw fetch body reading)
     fetch(`${baseUrl}/copilot/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, history: messages.value.slice(-10) }),
+      body: JSON.stringify({
+        message: text,
+        history: messages.value.filter(m => m.role === 'user').slice(-10),
+      }),
       signal: controller.signal,
     }).then(async (response) => {
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`)
-      }
-      // SSE parsing
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+
       const reader = response.body?.getReader()
       if (!reader) throw new Error('No response body')
 
@@ -43,8 +50,7 @@ export function useCopilotChat() {
         if (done) break
 
         const chunk = decoder.decode(value, { stream: true })
-        const lines = chunk.split('\n')
-        for (const line of lines) {
+        for (const line of chunk.split('\n')) {
           if (line.startsWith('data: ')) {
             const data = line.slice(6).trim()
             if (data === '[DONE]') continue
@@ -58,12 +64,16 @@ export function useCopilotChat() {
             }
           }
         }
-        // Trigger reactivity by replacing the array entry
+        // Trigger reactivity
         messages.value = [...messages.value]
       }
     }).catch((err) => {
       if (err.name === 'AbortError') return
-      messages.value.push({ role: 'assistant', content: `Error: ${err.message}`, timestamp: Date.now() })
+      messages.value.push({
+        role: 'assistant',
+        content: `Error: ${err.message}`,
+        timestamp: Date.now(),
+      })
     }).finally(() => {
       isGenerating.value = false
       abortController.value = null

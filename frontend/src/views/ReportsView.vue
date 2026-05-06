@@ -11,21 +11,16 @@
       <div v-for="i in 3" :key="i" class="skeleton-row" />
     </template>
 
-    <DataTable
-      v-else-if="reports.length"
-      :columns="columns"
-      :data="reports"
-      :title="t('reports.title')"
-      searchable
-    >
+    <div v-else-if="isError" class="error-state">{{ t('common.error') }}: {{ error?.message }}</div>
+
+    <DataTable v-else-if="reports.length" :columns="columns" :data="reports" :title="t('reports.title')" searchable>
       <template #actions="{ row }">
-        <button class="text-btn" @click="previewReport(row)">{{ t('forms.preview') }}</button>
+        <button class="text-btn" @click="previewReport(row)">{{ t('reports.preview') }}</button>
       </template>
     </DataTable>
 
     <div v-else class="empty-state">{{ t('reports.noItems') }}</div>
 
-    <!-- Preview modal -->
     <Teleport to="body">
       <div v-if="previewItem" class="modal-overlay" @click.self="previewItem = null">
         <div class="modal-content modal-wide">
@@ -34,11 +29,7 @@
             <button @click="previewItem = null" class="close-btn">✕</button>
           </div>
           <div class="modal-body">
-            <DataTable
-              :columns="reportColumns"
-              :data="mockReportData"
-              :title="previewItem.name"
-            />
+            <DataTable :columns="reportColumns" :data="mockReportData" :title="previewItem.name" />
           </div>
         </div>
       </div>
@@ -54,28 +45,20 @@ import DataTable from '@/components/data/DataTable.vue'
 
 const { t } = useI18n()
 
-interface ReportItem {
-  id: string
-  name: string
-  type: string
-  version: number
-  status: string
-  createdAt: string
-  dataSource?: string
-}
+interface ReportItem { id: string; name: string; type: string; version: number; status: string; createdAt: string }
 
-const columns = [
-  { key: 'name', label: 'Name', sortable: true },
-  { key: 'version', label: 'Version', sortable: true },
-  { key: 'status', label: 'Status', sortable: true },
-  { key: 'createdAt', label: 'Created', sortable: true },
-]
+const columns = computed(() => [
+  { key: 'name', label: t('common.name'), sortable: true },
+  { key: 'version', label: t('common.version'), sortable: true },
+  { key: 'status', label: t('common.status'), sortable: true },
+  { key: 'createdAt', label: t('common.created'), sortable: true },
+])
 
-const reportColumns = [
-  { key: 'column', label: 'Column' },
-  { key: 'type', label: 'Type' },
-  { key: 'summary', label: 'Summary' },
-]
+const reportColumns = computed(() => [
+  { key: 'column', label: t('common.column') },
+  { key: 'type', label: t('common.type') },
+  { key: 'summary', label: t('common.summary') },
+])
 
 const mockReportData = [
   { column: 'Name', type: 'String', summary: 'Customer name' },
@@ -84,10 +67,9 @@ const mockReportData = [
   { column: 'Status', type: 'String', summary: 'Current status' },
 ]
 
-const { data, isPending, refetch } = useGet<ReportItem[]>('reports', '/api/v1/metadata', {
+const { data, isPending, isError, error, refetch } = useGet<ReportItem[]>('reports', '/api/v1/metadata', {
   params: { category: 'report', type: 'REPORT' },
 })
-
 const reports = computed(() => data.value || [])
 const previewItem = ref<ReportItem | null>(null)
 
@@ -104,6 +86,7 @@ function previewReport(row: ReportItem) { previewItem.value = row }
 .skeleton-row { height: 48px; background: #f3f4f6; margin-bottom: 0.5rem; border-radius: 6px; animation: pulse 1.5s infinite; }
 @keyframes pulse { 50% { opacity: 0.5; } }
 .empty-state { text-align: center; padding: 3rem; color: #9ca3af; }
+.error-state { text-align: center; padding: 2rem; color: #dc2626; }
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; display: flex; align-items: center; justify-content: center; }
 .modal-content { background: white; border-radius: 12px; max-width: 720px; width: 90%; max-height: 80vh; overflow-y: auto; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid #e5e7eb; }

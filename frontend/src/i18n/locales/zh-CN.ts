@@ -48,6 +48,7 @@ export default {
     title: '\u62A5\u8868',
     refresh: '\u5237\u65B0',
     newReport: '\u65B0\u5EFA\u62A5\u8868',
+    preview: '\u9884\u89C8',
     noItems: '\u6682\u65E0\u62A5\u8868\u3002',
   },
   workflows: {
@@ -70,6 +71,13 @@ export default {
     themeColorblind: '\u8272\u76F2\u53CB\u597D',
   },
   common: {
+    name: '\u540D\u79F0',
+    version: '\u7248\u672C',
+    status: '\u72B6\u6001',
+    created: '\u521B\u5EFA\u65F6\u95F4',
+    column: '\u5217',
+    type: '\u7C7B\u578B',
+    summary: '\u6458\u8981',
     loading: '\u52A0\u8F7D\u4E2D...',
     error: '\u53D1\u751F\u9519\u8BEF',
     retry: '\u91CD\u8BD5',
