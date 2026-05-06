@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("chaos")
 @Tag("chaos")
-class ChaosResilienceIntegrationTest {
+class ChaosResilienceIT {
 
     @Autowired
     private CircuitBreakerRegistry circuitBreakerRegistry;

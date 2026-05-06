@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
 @Tag("rag")
-class RagPipelineIntegrationTest {
+class RagPipelineIT {
 
     @Autowired
     private KnowledgeContextAssembler assembler;
