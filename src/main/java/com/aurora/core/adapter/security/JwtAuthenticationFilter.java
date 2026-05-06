@@ -1,8 +1,8 @@
 package com.aurora.core.adapter.security;
 
 import com.aurora.core.contract.TenantContext;
-import com.aurora.core.adapter.web.AuthController;
 import com.aurora.core.infrastructure.security.JwtTokenProvider;
+import com.aurora.core.infrastructure.security.TokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,14 +39,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
     private final TenantContext tenantContext;
-    private final AuthController authController;
+    private final TokenBlacklistService tokenBlacklistService;
 
     public JwtAuthenticationFilter(JwtTokenProvider tokenProvider,
-                                   TenantContext tenantContext,
-                                   AuthController authController) {
+                                    TenantContext tenantContext,
+                                    TokenBlacklistService tokenBlacklistService) {
         this.tokenProvider = tokenProvider;
         this.tenantContext = tenantContext;
-        this.authController = authController;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     @Override
@@ -75,7 +75,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             // Check token blacklist (logout enforcement)
-            if (authController.isTokenBlacklisted(token)) {
+            if (tokenBlacklistService.isBlacklisted(token)) {
                 log.debug("Blacklisted JWT token on {}", request.getRequestURI());
                 filterChain.doFilter(request, response);
                 return;

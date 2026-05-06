@@ -2,6 +2,7 @@ package com.aurora.core.adapter.web;
 
 import com.aurora.core.contract.TenantContext;
 import com.aurora.core.infrastructure.security.JwtTokenProvider;
+import com.aurora.core.infrastructure.security.TokenBlacklistService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -37,19 +38,19 @@ public class AuthController {
     private final JwtTokenProvider tokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final TenantContext tenantContext;
+    private final TokenBlacklistService tokenBlacklistService;
 
     // In-memory user store — replace with JPA repository in production
     private final Map<String, UserRecord> users = new ConcurrentHashMap<>();
 
-    // Token blacklist (in-memory) — replace with Redis in production
-    private final Set<String> tokenBlacklist = ConcurrentHashMap.newKeySet();
-
     public AuthController(JwtTokenProvider tokenProvider,
-                          PasswordEncoder passwordEncoder,
-                          TenantContext tenantContext) {
+                           PasswordEncoder passwordEncoder,
+                           TenantContext tenantContext,
+                           TokenBlacklistService tokenBlacklistService) {
         this.tokenProvider = tokenProvider;
         this.passwordEncoder = passwordEncoder;
         this.tenantContext = tenantContext;
+        this.tokenBlacklistService = tokenBlacklistService;
         initializeSeedUsers();
     }
 
@@ -123,7 +124,7 @@ public class AuthController {
                            required = false) String authHeader) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-            tokenBlacklist.add(token);
+            tokenBlacklistService.blacklist(token);
             log.info("Token added to blacklist");
         }
         return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
@@ -146,13 +147,6 @@ public class AuthController {
                 "tenantId", tenantId.toString(),
                 "authenticated", true
         ));
-    }
-
-    /**
-     * Check if a token has been blacklisted.
-     */
-    public boolean isTokenBlacklisted(String token) {
-        return tokenBlacklist.contains(token);
     }
 
     private void initializeSeedUsers() {

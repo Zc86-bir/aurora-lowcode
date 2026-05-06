@@ -166,6 +166,7 @@ aurora:
 # ====================
 # MCP Server (SSE Transport)
 # ====================
+---
 aurora:
   mcp:
     auth:
@@ -302,8 +303,11 @@ spring:
   config:
     activate:
       on-profile: test
-
-spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.autoconfigure.anthropic.AnthropicAutoConfiguration
+      - org.springframework.ai.autoconfigure.openai.OpenAiAutoConfiguration
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
   datasource:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
     driver-class-name: org.h2.Driver
@@ -316,6 +320,10 @@ spring:
       ddl-auto: create-drop
 
 aurora:
+  ai-routing:
+    enabled: false
+  ai-cost-firewall:
+    enabled: false
   skill:
     sandbox:
       enabled: false
@@ -323,9 +331,15 @@ aurora:
     hot-reload:
       enabled: false
 
+management:
+  health:
+    redis:
+      enabled: false
+
 # ====================
 # Notification (Email)
 # ====================
+---
 aurora:
   notification:
     email:
@@ -364,6 +378,15 @@ spring:
   config:
     activate:
       on-profile: prod
+  lifecycle:
+    timeout-per-shutdown-phase: ${SHUTDOWN_TIMEOUT:1m}
+  ai:
+    routing:
+      primary: ${AI_PRIMARY_MODEL:anthropic}
+      fallback: ${AI_FALLBACK_MODEL:openai}
+      timeout: 15s
+      retry-on-fallback: true
+      max-fallback-attempts: 1
 
 server:
   port: ${SERVER_PORT:8443}
@@ -372,10 +395,6 @@ server:
     key-store: ${SSL_KEYSTORE:classpath:keystore.p12}
     key-store-password: ${SSL_KEYSTORE_PASSWORD}
   shutdown: graceful
-
-spring:
-  lifecycle:
-    timeout-per-shutdown-phase: ${SHUTDOWN_TIMEOUT:1m}
 
 aurora:
   security:
@@ -388,18 +407,10 @@ aurora:
       enabled: true
       network-isolation: true
 
-spring:
-  ai:
-    routing:
-      primary: ${AI_PRIMARY_MODEL:anthropic}
-      fallback: ${AI_FALLBACK_MODEL:openai}
-      timeout: 15s
-      retry-on-fallback: true
-      max-fallback-attempts: 1
-
 # ====================
 # RAG / pgvector
 # ====================
+---
 aurora:
   rag:
     embedding-dimensions: 1536
