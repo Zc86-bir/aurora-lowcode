@@ -1,0 +1,38 @@
+# Chaos Engineering Profile — ONLY for dev/test environments
+# NEVER activate this profile in production!
+#
+# Enables Chaos Monkey Latency Assault on LLM gateway calls.
+# Used by ChaosResilienceIntegrationTest.
+
+chaos:
+  monkey:
+    enabled: true
+    assaults:
+      latency-active: true
+      latency-range-start: 2000
+      latency-range-end: 5000
+      exceptions-active: false
+      kill-application-active: false
+      memory-active: false
+    watcher:
+      rest-controller: true
+      service: true
+      repository: false
+      component: false
+
+# Override Resilience4j for faster chaos testing
+resilience4j:
+  circuitbreaker:
+    instances:
+      llmGateway:
+        sliding-window-size: 5
+        minimum-number-of-calls: 2
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 5s
+        slow-call-duration-threshold: 2s
+        slow-call-rate-threshold: 50
+
+logging:
+  level:
+    de.codecentric.chaos.monkey: DEBUG
+    io.github.resilience4j: DEBUG

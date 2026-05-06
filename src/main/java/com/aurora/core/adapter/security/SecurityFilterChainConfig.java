@@ -23,6 +23,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  *   <li>{@code GET /actuator/health} — health checks</li>
  *   <li>{@code GET /v3/api-docs/**} — OpenAPI docs</li>
  *   <li>{@code GET /swagger-ui/**} — Swagger UI</li>
+ *   <li>{@code /api/v1/external/**} — external API (JWT or API key)</li>
  * </ul>
  *
  * <p>All other {@code /api/**} and {@code /mcp/**} endpoints require a valid JWT.
@@ -32,9 +33,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityFilterChainConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
 
-    public SecurityFilterChainConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityFilterChainConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+                                      ApiKeyAuthenticationFilter apiKeyAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.apiKeyAuthenticationFilter = apiKeyAuthenticationFilter;
     }
 
     @Bean
@@ -57,13 +61,19 @@ public class SecurityFilterChainConfig {
                 .requestMatchers("/v3/api-docs/**").permitAll()
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/swagger-ui.html").permitAll()
+                // External API — accessible via JWT or API key
+                .requestMatchers("/api/v1/external/**").permitAll()
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )
 
             // Add JWT filter before Spring's default authentication filter
             .addFilterBefore(jwtAuthenticationFilter,
-                    UsernamePasswordAuthenticationFilter.class);
+                    UsernamePasswordAuthenticationFilter.class)
+
+            // Add API key filter after JWT (only activates if no JWT auth)
+            .addFilterAfter(apiKeyAuthenticationFilter,
+                    JwtAuthenticationFilter.class);
 
         return http.build();
     }

@@ -22,6 +22,7 @@
 - [十一、PHASE 5 生产交付](#十一phase-5-生产交付)
 - [十二、PHASE 6 核心运行时与安全引导](#十二phase-6-核心运行时与安全引导)
 - [十三、PHASE 7 架构治理与企业级补全](#十三phase-7-架构治理与企业级补全)
+- [十四、PHASE 9 企业集成、可靠性 & V1.0.0 GA](#十四phase-9-企业集成可靠性--v100-ga)
 
 ---
 
@@ -1175,6 +1176,82 @@ AI Pipeline / MCP Client
 
 ---
 
+## 十四、PHASE 9 企业集成、可靠性 & V1.0.0 GA
+
+### 14.1 外部 API Key 管理
+
+为外部系统提供无头 API 访问能力。租户管理员通过 `POST /api/v1/apikeys` 创建 API Key，格式为 `aurora_sk_<44-char base64>`（256-bit 熵，SHA-256 哈希存储）。外部系统在 `X-API-Key` 头中携带密钥，`ApiKeyAuthenticationFilter` 查找哈希并注入 SecurityContext。
+
+```
+POST /api/v1/apikeys          → 创建 Key（返回明文一次）
+GET  /api/v1/apikeys          → 列出所有 Key（仅元数据）
+DELETE /api/v1/apikeys/{id}    → 吊销 Key
+API Key 认证                   → /api/v1/external/** 端点
+```
+
+**安全特性**：
+- SHA-256 哈希存储（不是 BCrypt — API Key 本身已是高熵随机值）
+- 确定性哈希查找（无时序侧信道）
+- 密钥过期后自动 status=EXPIRED
+- 仅创建时返回明文，`warning` 字段提示安全保存
+
+### 14.2 企业级 Webhook 引擎
+
+事件驱动架构的核心组件。监听 DomainEvent（Created/Updated/Deleted/StatusChanged/Versioned/ExecutionEvent），向租户配置的外部 URL 推送事件。
+
+```
+DomainEvent → EventBus → WebhookDispatcher → 【并发扇出】
+                  └── StructuredTaskScope (30s 超时)
+                       └── virtual threads → HttpClient 发送
+                            └── X-Aurora-Signature: sha256=<HMAC>
+                            └── Resilience4j 重试（3 次，1s 退避）
+```
+
+**签名验证**（接收端）：
+```java
+WebhookSigner.verify(payload, secret, signature);  // constant-time equals
+```
+
+**端点管理**：
+- `POST /api/v1/webhooks` — 创建（自动生成 secret）
+- `GET /api/v1/webhooks` — 列表
+- `PUT /api/v1/webhooks/{id}` — 更新
+- `DELETE /api/v1/webhooks/{id}` — 删除
+- `POST /api/v1/webhooks/{id}/regenerate-secret` — 重新生成密钥
+
+### 14.3 JMH 性能基准 (T18 ✅)
+
+```java
+@BenchmarkMode(Mode.AverageTime)
+@Param({"virtual", "fixed200", "fixed16", "cached"})
+// 1000 × 200ms 模拟 I/O
+```
+
+| Executor 类型 | 耗时 | 说明 |
+|---------------|------|------|
+| VirtualThread | ~500ms | 全部 1000 任务 I/O 重叠 |
+| FixedPool(200) | ~1000ms | 5 波 200 个 |
+| FixedPool(16) | ~13000ms | 63 波 16 个 |
+| CachedPool | ~1000ms | 创建 1000 个平台线程 |
+
+运行方式：`scripts\run-benchmark.bat` 或 `mvn exec:java -Dexec.mainClass="com.aurora.benchmark.BenchmarkRunner" -Dexec.classpathScope=test`
+
+### 14.4 混沌工程验证
+
+**依赖**：`chaos-monkey-spring-boot:3.1.0`（仅 test scope）+ `application-chaos.yml`（仅 @ActiveProfiles("chaos")）
+
+**测试**：`ChaosResilienceIntegrationTest.java`
+1. 激活 Chaos Monkey LatencyAssault（2-5s 延迟）
+2. 发送 20 个并发请求 → 超过熔断阈值
+3. 断言 CircuitBreaker 状态 ⊕ OPEN
+4. 断言后续请求立即被拒绝（< 100ms）
+
+**Resilience4j 配置**（`application.yml`）：
+- `llmGateway`：滑动窗口 10，最小调用 3，失败率阈值 50%，打开状态等待 10s
+- `webhookDispatcher`：重试 3 次，间隔 1s
+
+---
+
 ## 附录：完整统计
 
 | 指标 | 数值 |
@@ -1182,29 +1259,31 @@ AI Pipeline / MCP Client
 | Java 后端文件 | 80 |
 | 前端文件 | 34 |
 | Skill YAML | 13（10 JeecgBoot + 3 通用） |
-| Flyway 迁移 | 3 |
-| 集成测试 | 5（53 个用例） |
-| 单元测试 | 7（36 个用例：ArchUnit 20 + JwtTokenProvider 13 + LlmGateway 5） |
-| E2E 测试 | 2（login-flow + dashboard-render） |
+| Flyway 迁移 | 5（V1-V5） |
+| 集成测试 | 6（55+ 个用例，含 ChaosResilience） |
+| 单元测试 | 9（38+ 个用例：ArchUnit 20 + JwtTokenProvider 13 + LlmGateway 5 + JMH 1 + Chaos 1） |
+| E2E 测试 | 3（login-flow + dashboard-render + saas-console 7 tests） |
+| JMH 基准 | 2（VirtualThreadVsPlatformThread + Runner） |
 | Docker/K8s | 12（Dockerfile + compose + Helm Chart） |
 | CI/CD | 2（ci.yml 6 jobs + cd.yml） |
-| 工程化 | 4（Makefile + BOOTSTRAP.md + verify.sh + sync-api.sh） |
+| 工程化 | 6（Makefile + BOOTSTRAP.md + verify.sh + sync-api.sh + run-benchmark.sh/bat） |
+| Nginx 配置 | 1（deploy/nginx-local.conf） |
 | Prompt 模板 | 2 |
 | ADR 文档 | 4 |
 | 审查报告 | 12 |
-| **总计** | **~155** |
-
+| **总计** | **~175** |
 ### 代码统计
 
 | 特性 | 数量 |
 |------|------|
 | Sealed Interfaces | 7（63 个 permits） |
-| Record 类型 | 40+ |
-| REST API 端点 | 20+（含 /auth/login, /auth/logout, /auth/me, /api/v1/i18n/{locale}） |
+| Record 类型 | 45+ |
+| REST API 端点 | 30+（含 /auth/*, /api/v1/apikeys, /api/v1/webhooks, /api/v1/external/**） |
 | WebSocket 端点 | 1（/ws/collaborate） |
-| 数据库表 | 19（11 核心 + 8 JeecgBoot） |
-| JPA Entity | 4（Metadata, Tenant, SkillRegistry, AuditChain） |
-| JPA Repository | 4 |
+| MCP 端点 | 2（/mcp/sse, /mcp/message）+ web_search/web_fetch 工具 |
+| 数据库表 | 21（11 核心 + 8 JeecgBoot + 2 企业集成） |
+| JPA Entity | 6（Metadata, Tenant, SkillRegistry, AuditChain, ApiKey, WebhookEndpoint） |
+| JPA Repository | 6 |
 | 安全规则 | 50+ |
 | 业务规则 | 40+ |
 | 测试用例 | 91（53 集成 + 36 单元 + 2 E2E） |
