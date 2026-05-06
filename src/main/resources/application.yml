@@ -398,6 +398,23 @@ spring:
       max-fallback-attempts: 1
 
 # ====================
+# RAG / pgvector
+# ====================
+aurora:
+  rag:
+    embedding-dimensions: 1536
+    top-k: 3
+    similarity-threshold: 0.75
+    webhook:
+      encryption-key: ${WEBHOOK_ENCRYPTION_KEY:}
+
+spring:
+  ai:
+    vectorstore:
+      pgvector:
+        initialize-schema: false
+
+# ====================
 # Resilience4j — Circuit Breaker & Retry
 # ====================
 resilience4j:
