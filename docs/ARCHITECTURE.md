@@ -437,11 +437,11 @@ Entry 2: hash_2 = SHA256(hash_1 + content_2)
 | `SkillRegistryJpa.java` | `infrastructure/database/repository/` | JeecgBoot 兼容 + category 查询 |
 | `AuditChainJpa.java` | `infrastructure/database/repository/` | seqNum 查询 + 时间范围 |
 
-### 5.2 前端（29 个文件）
+### 5.2 前端（34 个文件）
 
 | 文件 | 路径 | 功能 |
 |------|------|------|
-| `main.ts` | `src/` | Vue3 + Pinia + Router 挂载 + 全局错误处理 |
+| `main.ts` | `src/` | Vue3 + Pinia + Router + i18n 挂载 |
 | `App.vue` | `src/` | 布局壳 + 主题 + 全局 Loading（CSP scoped） |
 | `tokens.css` | `styles/` | Design Tokens（4 主题模式） |
 | `vite.config.ts` | `/` | Vite 6 配置（chunk 分割 + CSP + brotli/gzip） |
@@ -450,29 +450,29 @@ Entry 2: hash_2 = SHA256(hash_1 + content_2)
 | `stores/tenant.ts` | `src/stores/` | Pinia tenant store |
 | `plugins/api-interceptor.ts` | `src/plugins/` | fetch 拦截器：自动注入 Authorization + X-Tenant-Id + Accept-Language |
 | `i18n/index.ts` | `src/i18n/` | vue-i18n 配置 + 浏览器语言检测 |
-| `i18n/locales/en.ts` | `src/i18n/locales/` | 前端英文翻译 |
+| `i18n/locales/en.ts` | `src/i18n/locales/` | 前端英文翻译（含 copilot/forms/reports/settings 等） |
 | `i18n/locales/zh-CN.ts` | `src/i18n/locales/` | 前端中文翻译 |
 | `api/client.ts` | `src/api/` | API 客户端配置（token/tenant 注入） |
-| `api/README.md` | `src/api/` | 使用规范 |
-| `useServerState.ts` | `composables/` | TanStack Query 封装 |
+| `useServerState.ts` | `composables/` | TanStack Query 封装（useGet/usePost/useDelete） |
+| `useCopilotChat.ts` | `composables/` | SSE 流式聊天 + abort + unmount 清理 |
 | `CrdtSyncEngine.ts` | `composables/` | Yjs CRDT 协同 |
-| `A11yTestRunner.ts` | `utils/` | axe-core 无障碍扫描 |
-| `ThemeCompiler.ts` | `utils/` | 运行时主题编译 |
-| `ChunkOptimizer.ts` | `utils/` | 路由分割 + 预加载 + 图片降级 |
+| `AICopilotPanel.vue` | `components/copilot/` | 浮动 AI 助手 + Markdown 渲染 + SSE 打字机效果 |
+| `BpmnViewer.vue` | `components/workflow/` | bpmn-js 封装 + 生命周期管理 |
 | `DynamicForm.vue` | `components/form/` | 动态表单 + ReDoS 防护 |
 | `FormFieldRenderer.vue` | `components/form/` | 字段渲染器 |
-| `DataTable.vue` | `components/data/` | 数据表格 + 骨架屏 |
-| `LoginView.vue` | `views/` | 登录表单 |
-| `LayoutView.vue` | `views/` | Header + Nav + router-view |
+| `DataTable.vue` | `components/data/` | 数据表格 + 骨架屏 + 搜索排序分页 |
+| `LoginView.vue` | `views/` | 登录表单 + i18n |
+| `LayoutView.vue` | `views/` | Header + Nav + router-view + AICopilotPanel |
 | `DashboardView.vue` | `views/` | 统计卡片 |
-| `FormsView.vue` | `views/` | 占位 |
-| `ReportsView.vue` | `views/` | 占位 |
-| `WorkflowsView.vue` | `views/` | 占位 |
-| `SettingsView.vue` | `views/` | 占位 |
+| `FormsView.vue` | `views/` | 表单管理 + DataTable + DynamicForm 预览 |
+| `ReportsView.vue` | `views/` | 报表管理 + DataTable + 模拟数据预览 |
+| `WorkflowsView.vue` | `views/` | 工作流管理 + BPMN 图表预览 |
+| `SettingsView.vue` | `views/` | 3 Tab 设置（Profile + BYOK + Theme） |
 | `form.ts` | `types/` | FormField + FormSchema 类型 |
 | `env.d.ts` | `/` | Vite 环境变量类型 |
-| `package.json` | `/` | 依赖声明 |
+| `package.json` | `/` | 依赖声明（含 markdown-it, bpmn-js） |
 | `tsconfig.json` | `/` | TypeScript 配置 |
+| `saas-console.spec.ts` | `e2e/` | Playwright E2E（导航 + Copilot + 全视图） |
 
 ### 5.3 Skill 定义（13 个 YAML）
 
@@ -1180,7 +1180,7 @@ AI Pipeline / MCP Client
 | 指标 | 数值 |
 |------|------|
 | Java 后端文件 | 80 |
-| 前端文件 | 29 |
+| 前端文件 | 34 |
 | Skill YAML | 13（10 JeecgBoot + 3 通用） |
 | Flyway 迁移 | 3 |
 | 集成测试 | 5（53 个用例） |
