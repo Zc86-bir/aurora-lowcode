@@ -374,7 +374,7 @@ Entry 2: hash_2 = SHA256(hash_1 + content_2)
 | `BusinessRuleEngine.java` | `ai/` | 4 种规则类型（Sealed） |
 | `SkillTelemetry.java` | `ai/` | Micrometer 指标 + 成本估算 + recordLlmCall() |
 
-#### Adapter（8 个）
+#### Adapter（9 个）
 
 | 文件 | 路径 | 功能 |
 |------|------|------|
@@ -387,12 +387,11 @@ Entry 2: hash_2 = SHA256(hash_1 + content_2)
 | `YjsWebSocketHandler.java` | `adapter/websocket/` | Yjs 二进制协议处理 |
 | `WebSocketAuthInterceptor.java` | `adapter/websocket/` | WebSocket 握手 JWT 验证 |
 
-#### Infrastructure（28 个）
+#### Infrastructure（29 个）
 
 | 文件 | 路径 | 功能 |
 |------|------|------|
-| `RedisCacheProvider.java` | `infrastructure/cache/` | L1 内存缓存 + 租户隔离 |
-| `VirtualThreadEventBus.java` | `infrastructure/event/` | 虚拟线程事件分发 + 死信队列 |
+| `RedisCacheProvider.java` | `infrastructure/cache/` | L1 内存缓存 + 租户隔离 || `VirtualThreadEventBus.java` | `infrastructure/event/` | 虚拟线程事件分发 + 死信队列 |
 | `RedisLockProvider.java` | `infrastructure/lock/` | 分布式锁 + 租约机制 |
 | `ObservabilityManager.java` | `infrastructure/observability/` | OpenTelemetry Traces + Metrics |
 | `StructuredJsonAuditLogger.java` | `infrastructure/audit/` | JSON 审计日志 + CSV 导出 |
@@ -418,6 +417,7 @@ Entry 2: hash_2 = SHA256(hash_1 + content_2)
 | `WebSocketConfig.java` | `infrastructure/config/` | WebSocket 端点注册 |
 | `DocumentRoomManager.java` | `infrastructure/collaboration/` | WebSocket 房间管理 |
 | `EmailNotificationService.java` | `infrastructure/notification/` | Thymeleaf + StructuredTaskScope 超时 |
+| `WebSearchService.java` | `infrastructure/search/` | opencli 联网搜索 + StructuredTaskScope 超时 |
 
 #### JPA Entity（4 个）
 
@@ -525,13 +525,14 @@ Entry 2: hash_2 = SHA256(hash_1 + content_2)
 | `FULL-PROJECT-review.md` | `docs/reviews/` | 全项目审查报告 |
 | `SPRING-BOOT-3.5-upgrade.md` | `docs/reviews/` | 升级报告 |
 
-### 5.6 MCP Server Adapter（3 个文件）
+### 5.6 MCP Server Adapter（4 个文件）
 
 | 文件 | 路径 | 功能 |
 |------|------|------|
 | `McpServerConfig.java` | `adapter/mcp/` | MCP 服务器配置（SSE 传输层自动配置） |
 | `McpSecurityFilter.java` | `adapter/mcp/` | JWT 认证过滤器（/mcp/* 端点保护） |
 | `AuroraSkillToolProvider.java` | `adapter/mcp/` | 10 个 Skill → MCP ToolCallback 桥接 |
+| `OpencliToolProvider.java` | `adapter/mcp/` | opencli web_search/web_fetch → MCP ToolCallback |
 
 ### 5.7 数据库迁移（3 个 SQL 文件）
 
@@ -604,7 +605,10 @@ Entry 2: hash_2 = SHA256(hash_1 + content_2)
 
 **工具注册**：
 - `AuroraSkillToolProvider` 自动注册 10 个内置 Skill 为 MCP Tools
+- `OpencliToolProvider` 注册 `web_search`（联网搜索）和 `web_fetch`（网页抓取）工具
 - Spring Boot Auto-Config 处理 SSE 传输层和端点路由
+
+**联网搜索**：启用 `aurora.search.enabled=true`（`SEARCH_ENABLED` 环境变量）后，MCP 客户端可通过 `web_search` 和 `web_fetch` 工具接入互联网，底层由 opencli 执行搜索与内容抓取。
 
 ### 6.3 权限体系（RBAC + ABAC）
 
@@ -1148,13 +1152,34 @@ Client (y-websocket)
         └── 定时清理空房间（60s）
 ```
 
+### 13.5 联网搜索（opencli）
+
+```
+AI Pipeline / MCP Client
+    │
+    ├── tool: web_search(query, limit)
+    │   → OpencliToolProvider.SearchToolCallback
+    │   → WebSearchService.search()
+    │   → opencli smart-search <query> -f json
+    │   → StructuredTaskScope (30s 超时)
+    │
+    └── tool: web_fetch(url)
+        → OpencliToolProvider.FetchToolCallback
+        → WebSearchService.fetch()
+        → opencli web read <url> -f plain
+        → StructuredTaskScope (15s 超时)
+```
+
+**启用方式**：设置 `SEARCH_ENABLED=true`（默认关闭）。需要系统安装 opencli。
+**安全**：调用走系统 subprocess，不暴露网络密钥。超时自动降级返回错误 JSON。
+
 ---
 
 ## 附录：完整统计
 
 | 指标 | 数值 |
 |------|------|
-| Java 后端文件 | 78 |
+| Java 后端文件 | 80 |
 | 前端文件 | 29 |
 | Skill YAML | 13（10 JeecgBoot + 3 通用） |
 | Flyway 迁移 | 3 |

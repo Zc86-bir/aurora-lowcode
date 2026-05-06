@@ -39,6 +39,7 @@ docker compose -f docker-compose.dev.yml up -d   # PostgreSQL + Redis
 - **Skill alias routing**: Old IDs (`form_generator`, `workflow_designer`, etc.) auto-route to `jeecg-*` via `SkillDefinitionLoader.resolveAlias()`.
 - **JWT**: HS256 via JJWT 0.12.5. `JWT_SECRET` ≥ 32 bytes. Seed user: `admin@aurora.dev` / `admin123`.
 - **Object storage**: Aliyun OSS (MinIO replaced). Config at `aurora.storage.oss.*`.
+- **Web search**: `WebSearchService` + `OpencliToolProvider` — enabled via `SEARCH_ENABLED=true`. Registers `web_search` (30s timeout) and `web_fetch` (15s timeout) MCP tools.
 
 ## Tests
 
