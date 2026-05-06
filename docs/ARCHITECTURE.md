@@ -1266,16 +1266,99 @@ WebhookSigner.verify(payload, secret, signature);  // constant-time equals
 
 ---
 
+## 十五、PHASE 10 企业级 RAG 引擎与微前端架构
+
+### 15.1 Host-Orchestrated Intelligence
+
+Phase 10 实现了 Host 统一治理的企业知识增强与前端扩展模型：
+
+- **RAG 轨道**：pgvector + TenantAwareVectorStore + 知识入库流水线 + 检索增强生成
+- **微前端轨道**：Vite Module Federation Host + Remote 静态注册 + 双层信任
+
+两条轨道共享 Host 的租户、鉴权、i18n 和主题能力，Remote 不能直接持有向量检索能力。
+
+### 15.2 PgVector 多租户向量检索
+
+**依赖**：PostgreSQL 17 `vector` 扩展 + Spring AI embedding（JDBC 直连，非 pgvector store starter）
+
+**表结构**：
+- `tenant_knowledge_document`：文档级元数据（scope, source_type, checksum, status）
+- `tenant_knowledge_chunk`：切片内容（chunk_index, content, token_count, semantic_tags）
+- `vector_store`：向量嵌入（1536 维，HNSW 索引，cosine 距离）
+
+**隔离边界**：`TenantAwareVectorStore` 是唯一允许的向量检索入口：
+- 每次相似度搜索强制注入 `tenant_id`
+- 强制注入 `knowledge_scope IN (...)` 和 `visibility_policy IN (...)`
+- 排序：MODULE > PROJECT > TENANT，然后按相似度降序
+- 缺失租户上下文时直接拒绝检索
+
+### 15.3 知识入库流水线
+
+**端点**：
+- `POST /api/v1/knowledge/upload` — 文件上传
+- `POST /api/v1/knowledge/import-url` — URL 导入
+- `GET /api/v1/knowledge` — 文档列表
+
+**状态机**：PENDING → PARSING → SPLITTING → EMBEDDING → COMPLETED / FAILED
+
+**异步执行**：`KnowledgeIngestionService` 通过 `StructuredTaskScope` 后台运行，不阻塞 HTTP 线程。完成后发布 `KnowledgeIngestedEvent` 至 `EventBus`。
+
+### 15.4 RAG 增强生成
+
+**检索策略**：
+- topK = 3，similarity threshold = 0.75
+- 空结果回退到无 RAG 生成（不抛错）
+- `KnowledgeContextAssembler` 负责组装 enterprise context
+
+**Prompt 增强**：
+- `code_generator_v1.0.0.j2` 新增 `{{ enterprise_context }}` 注入点
+- 向后兼容：无上下文时块为空
+
+### 15.5 微前端 Module Federation
+
+**依赖**：`@originjs/vite-plugin-federation`
+
+**Host 配置**：
+- `shared`：vue, vue-router, pinia, vue-i18n, @tanstack/vue-query
+- `tokens.css` + `useServerState` 通过合同共享
+
+**注册模型**：
+- `RemoteRegistry.ts`：静态注册表（remoteId, entryUrl, routeBase, requiredCapabilities）
+- `router/index.ts`：启动时根据注册表生成远程路由
+- 双层信任：平台白名单 + 租户启用清单
+
+**安全约束**：
+- 仅允许注册表内 Remote 源
+- CSP 必须显式放行信任远程脚本源
+- Remote 失败不拖垮 Host（error boundary fallback）
+
+### 15.6 新增文件
+
+| 文件 | 功能 |
+|------|------|
+| `V6__init_pgvector.sql` | pgvector 扩展 + 3 表 + HNSW 索引 |
+| `TenantAwareVectorStore.java` | 唯一向量检索入口（强制租户过滤） |
+| `KnowledgeDocumentEntity.java` / `KnowledgeChunkEntity.java` | JPA 实体 |
+| `KnowledgeDocumentRepositoryJpa.java` / `KnowledgeChunkRepositoryJpa.java` | 仓储 |
+| `KnowledgeIngestionService.java` | 异步状态机流水线 |
+| `KnowledgeContextAssembler.java` | RAG 上下文组装（scope ranking） |
+| `KnowledgeBaseController.java` | REST 端点 |
+| `RagPipelineIntegrationTest.java` | 集成测试 |
+| `frontend/src/core/RemoteRegistry.ts` | 静态远程注册表 |
+| `frontend/MICRO_FRONTEND_GUIDE.md` | Remote 开发规范 |
+
+---
+
 ## 附录：完整统计
 
 | 指标 | 数值 |
 |------|------|
-| Java 后端文件 | 87 |
-| 前端文件 | 34 |
+| Java 后端文件 | 97 |
+| 前端文件 | 37 |
 | Skill YAML | 13（10 JeecgBoot + 3 通用） |
-| Flyway 迁移 | 5（V1-V5） |
-| 集成测试 | 6（55+ 个用例，含 ChaosResilience） |
-| 单元测试 | 9（38+ 个用例：ArchUnit 20 + JwtTokenProvider 13 + LlmGateway 5 + JMH 1 + Chaos 1） |
+| Flyway 迁移 | 6（V1-V6） |
+| 集成测试 | 7（56+ 个用例，含 ChaosResilience + RagPipeline） |
+| 单元测试 | 9（38+ 个用例） |
 | E2E 测试 | 3（login-flow + dashboard-render + saas-console 7 tests） |
 | JMH 基准 | 2（VirtualThreadVsPlatformThread + Runner） |
 | Docker/K8s | 12（Dockerfile + compose + Helm Chart） |
