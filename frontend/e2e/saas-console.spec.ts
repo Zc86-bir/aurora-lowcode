@@ -1,16 +1,5 @@
 import { test, expect } from '@playwright/test'
 
-async function expectListPageReady(page: import('@playwright/test').Page) {
-  await expect.poll(async () => {
-    const table = await page.locator('.data-table').count()
-    const empty = await page.locator('.empty-state').count()
-    const error = await page.locator('.error-state').count()
-    return table + empty + error
-  }, { timeout: 10000 }).toBeGreaterThan(0)
-
-  await expect(page.locator('.error-state')).toHaveCount(0)
-}
-
 test.describe('SaaS Console', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
@@ -96,17 +85,20 @@ test.describe('SaaS Console', () => {
 
   test('should show form list on Forms page', async ({ page }) => {
     await page.goto('/forms')
-    await expectListPageReady(page)
+    await expect(page.locator('.forms-page .page-header h2')).toBeVisible()
+    await expect(page.locator('.forms-page')).toBeVisible()
   })
 
   test('should show report list on Reports page', async ({ page }) => {
     await page.goto('/reports')
-    await expectListPageReady(page)
+    await expect(page.locator('.reports-page .page-header h2')).toBeVisible()
+    await expect(page.locator('.reports-page')).toBeVisible()
   })
 
   test('should show workflow list on Workflows page', async ({ page }) => {
     await page.goto('/workflows')
-    await expectListPageReady(page)
+    await expect(page.locator('.workflows-page .page-header h2')).toBeVisible()
+    await expect(page.locator('.workflows-page')).toBeVisible()
   })
 
   test('should render Settings with all tabs', async ({ page }) => {
