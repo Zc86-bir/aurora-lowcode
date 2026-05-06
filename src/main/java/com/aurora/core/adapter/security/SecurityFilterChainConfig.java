@@ -61,8 +61,8 @@ public class SecurityFilterChainConfig {
                 .requestMatchers("/v3/api-docs/**").permitAll()
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/swagger-ui.html").permitAll()
-                // External API — accessible via JWT or API key
-                .requestMatchers("/api/v1/external/**").permitAll()
+                // External API — requires JWT or API key authentication
+                .requestMatchers("/api/v1/external/**").authenticated()
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )

@@ -11,10 +11,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import jakarta.persistence.OptimisticLockException;
+import java.io.IOException;
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -49,19 +53,26 @@ public class WebhookDispatcher {
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
     private final Retry retry;
+    private final WebhookSecretEncryptor encryptor;
 
     public WebhookDispatcher(WebhookEndpointRepositoryJpa endpointRepository,
-                              ObjectMapper objectMapper) {
+                              ObjectMapper objectMapper,
+                              WebhookSecretEncryptor encryptor) {
         this.endpointRepository = endpointRepository;
         this.objectMapper = objectMapper;
+        this.encryptor = encryptor;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
+                .followRedirects(HttpClient.Redirect.NEVER)
                 .build();
 
         RetryConfig retryConfig = RetryConfig.custom()
                 .maxAttempts(3)
                 .waitDuration(Duration.ofSeconds(1))
-                .retryOnException(e -> true)
+                .retryOnException(e -> e instanceof IOException
+                        || e instanceof ConnectException
+                        || e instanceof HttpTimeoutException
+                        || e instanceof InterruptedException)
                 .build();
         this.retry = RetryRegistry.of(retryConfig).retry("webhook-dispatcher");
     }
@@ -124,18 +135,25 @@ public class WebhookDispatcher {
                 }
             });
 
-            // Success
-            endpoint.setSuccessCount(endpoint.getSuccessCount() + 1);
-            endpoint.setLastDeliveredAt(Instant.now());
-            endpoint.setRetryCount(0);
-            endpointRepository.save(endpoint);
+            // Success — update counters (versioned optimistic lock)
+            try {
+                endpoint.setSuccessCount(endpoint.getSuccessCount() + 1);
+                endpoint.setLastDeliveredAt(Instant.now());
+                endpoint.setRetryCount(0);
+                endpointRepository.save(endpoint);
+            } catch (OptimisticLockException e) {
+                log.debug("Optimistic lock on webhook counter update — concurrent delivery, skipping");
+            }
 
         } catch (Exception e) {
-            // All retries exhausted
-            endpoint.setFailureCount(endpoint.getFailureCount() + 1);
-            endpoint.setLastFailureAt(Instant.now());
-            endpoint.setLastFailureMessage(truncate(e.getMessage(), 1024));
-            endpointRepository.save(endpoint);
+            try {
+                endpoint.setFailureCount(endpoint.getFailureCount() + 1);
+                endpoint.setLastFailureAt(Instant.now());
+                endpoint.setLastFailureMessage(truncate(e.getMessage(), 1024));
+                endpointRepository.save(endpoint);
+            } catch (OptimisticLockException ole) {
+                log.debug("Optimistic lock on webhook failure counter — concurrent delivery, skipping");
+            }
 
             log.error("Webhook delivery failed to {} after {} retries: {}",
                     endpoint.getUrl(), retry.getRetryConfig().getMaxAttempts(),
@@ -147,7 +165,9 @@ public class WebhookDispatcher {
      * Single delivery attempt — build HTTP request, sign, and send.
      */
     private void deliver(WebhookEndpointEntity endpoint, String payload) throws Exception {
-        String signature = WebhookSigner.sign(payload, endpoint.getSecret());
+        UrlValidator.validate(endpoint.getUrl(), true);
+        String decryptedSecret = encryptor.decrypt(endpoint.getSecret());
+        String signature = WebhookSigner.sign(payload, decryptedSecret);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(endpoint.getUrl()))
@@ -164,9 +184,7 @@ public class WebhookDispatcher {
 
         if (response.statusCode() < 200 || response.statusCode() >= 300) {
             throw new RuntimeException(String.format(
-                    "Webhook endpoint returned HTTP %d: %s",
-                    response.statusCode(),
-                    truncate(response.body(), 500)));
+                    "Webhook endpoint returned HTTP %d", response.statusCode()));
         }
 
         log.debug("Webhook delivered to {} (HTTP {})", endpoint.getUrl(), response.statusCode());

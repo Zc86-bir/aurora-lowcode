@@ -11,11 +11,14 @@ import java.util.UUID;
 
 /**
  * Spring Data JPA Repository for {@link WebhookEndpointEntity}.
+ *
+ * <p>Note: {@code findActiveByTenantAndEvent} uses LIKE for comma-separated
+ * event matching. The {@code eventType} parameter is derived from
+ * {@link com.aurora.core.architecture.DomainEvent#getEventType()} which
+ * returns fixed values (CREATED, UPDATED, etc.) — safe from wildcard injection.
  */
 @Repository
 public interface WebhookEndpointRepositoryJpa extends JpaRepository<WebhookEndpointEntity, UUID> {
-
-    List<WebhookEndpointEntity> findByTenantIdAndActiveTrue(UUID tenantId);
 
     List<WebhookEndpointEntity> findByTenantId(UUID tenantId);
 

@@ -26,7 +26,7 @@ import java.util.UUID;
  * Only the SHA-256 hash is stored in the database; the raw key is
  * returned once at creation time.
  *
- * <p>Key format: {@code aurora_sk_<44-char base64>}
+ * <p>Key format: {@code aurora_sk_<43-char base64url>}
  */
 @Service
 public class ApiKeyService {
@@ -84,7 +84,7 @@ public class ApiKeyService {
      * @param rawKey the raw key string from the X-API-Key header
      * @return the matching ApiKeyEntity if valid, empty otherwise
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public Optional<ApiKeyEntity> validateApiKey(String rawKey) {
         if (rawKey == null || !rawKey.startsWith(KEY_PREFIX)) {
             return Optional.empty();
@@ -108,13 +108,11 @@ public class ApiKeyService {
             if (entity.getExpiresAt() != null && entity.getExpiresAt().isBefore(Instant.now())) {
                 log.debug("API key '{}' is expired", entity.getName());
                 entity.setStatus("EXPIRED");
-                repository.save(entity);
                 return Optional.empty();
             }
 
-            // Update last used timestamp
+            // Update last used timestamp (managed entity, no explicit save needed)
             entity.setLastUsedAt(Instant.now());
-            repository.save(entity);
         }
 
         return entityOpt;

@@ -426,9 +426,6 @@ resilience4j:
           - java.lang.RuntimeException
           - java.net.ConnectException
           - java.net.http.HttpTimeoutException
-    instances:
-      webhookDispatcher:
-        base-config: default
 
 logging:
   level:

@@ -3,6 +3,8 @@ package com.aurora.core.adapter.web;
 import com.aurora.core.contract.TenantContext;
 import com.aurora.core.infrastructure.database.entity.WebhookEndpointEntity;
 import com.aurora.core.infrastructure.database.repository.WebhookEndpointRepositoryJpa;
+import com.aurora.core.infrastructure.webhook.UrlValidator;
+import com.aurora.core.infrastructure.webhook.WebhookSecretEncryptor;
 import com.aurora.core.infrastructure.webhook.WebhookSigner;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -35,11 +37,14 @@ public class WebhookController {
 
     private final WebhookEndpointRepositoryJpa repository;
     private final TenantContext tenantContext;
+    private final WebhookSecretEncryptor encryptor;
 
     public WebhookController(WebhookEndpointRepositoryJpa repository,
-                              TenantContext tenantContext) {
+                              TenantContext tenantContext,
+                              WebhookSecretEncryptor encryptor) {
         this.repository = repository;
         this.tenantContext = tenantContext;
+        this.encryptor = encryptor;
     }
 
     @Operation(summary = "Create a new webhook endpoint",
@@ -59,6 +64,7 @@ public class WebhookController {
         if (request.url() == null || request.url().isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "URL is required"));
         }
+        UrlValidator.validate(request.url(), true);
 
         String secret = WebhookSigner.generateSecret();
 
@@ -66,7 +72,7 @@ public class WebhookController {
         entity.setId(UUID.randomUUID());
         entity.setTenantId(tenantId);
         entity.setUrl(request.url());
-        entity.setSecret(secret);
+        entity.setSecret(encryptor.encrypt(secret));
         entity.setEvents(request.events() != null ? request.events() : "");
         entity.setActive(true);
         entity.setDescription(request.description() != null ? request.description() : "");
@@ -192,7 +198,7 @@ public class WebhookController {
 
         String newSecret = WebhookSigner.generateSecret();
         WebhookEndpointEntity entity = opt.get();
-        entity.setSecret(newSecret);
+        entity.setSecret(encryptor.encrypt(newSecret));
         repository.save(entity);
 
         log.info("Webhook secret regenerated for endpoint: {}", endpointId);

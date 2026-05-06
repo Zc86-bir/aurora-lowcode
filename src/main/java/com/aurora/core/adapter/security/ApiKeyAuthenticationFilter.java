@@ -70,21 +70,20 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        Optional<ApiKeyEntity> entityOpt = apiKeyService.validateApiKey(apiKey);
+        if (entityOpt.isEmpty()) {
+            log.debug("Invalid or expired API key on {}", request.getRequestURI());
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        ApiKeyEntity entity = entityOpt.get();
+
         try {
-            Optional<ApiKeyEntity> entityOpt = apiKeyService.validateApiKey(apiKey);
-            if (entityOpt.isEmpty()) {
-                log.debug("Invalid or expired API key on {}", request.getRequestURI());
-                filterChain.doFilter(request, response);
-                return;
-            }
-
-            ApiKeyEntity entity = entityOpt.get();
-
             // Build Spring Security authorities from scopes
             List<SimpleGrantedAuthority> authorities = buildAuthorities(entity.getScopes());
 
             // Create Spring Security Authentication
-            // The principal is a synthetic user ID derived from the key ID
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             "apikey:" + entity.getId(), null, authorities);

@@ -26,6 +26,7 @@ public final class WebhookSigner {
     private static final Logger log = LoggerFactory.getLogger(WebhookSigner.class);
     private static final String HMAC_ALGORITHM = "HmacSHA256";
     private static final String SIGNATURE_PREFIX = "sha256=";
+    private static final java.security.SecureRandom SECURE_RANDOM = new java.security.SecureRandom();
 
     private WebhookSigner() {}
 
@@ -60,7 +61,7 @@ public final class WebhookSigner {
      */
     public static String generateSecret() {
         byte[] bytes = new byte[32];
-        new java.security.SecureRandom().nextBytes(bytes);
+        SECURE_RANDOM.nextBytes(bytes);
         return HexFormat.of().formatHex(bytes);
     }
 
@@ -82,9 +83,9 @@ public final class WebhookSigner {
     }
 
     private static boolean constantTimeEquals(String a, String b) {
-        if (a.length() != b.length()) return false;
-        int result = 0;
-        for (int i = 0; i < a.length(); i++) {
+        int result = a.length() ^ b.length();
+        int minLen = Math.min(a.length(), b.length());
+        for (int i = 0; i < minLen; i++) {
             result |= a.charAt(i) ^ b.charAt(i);
         }
         return result == 0;
