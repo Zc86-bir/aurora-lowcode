@@ -111,6 +111,8 @@
         <!-- Security -->
         <jjwt.version>0.12.6</jjwt.version>
         <bouncycastle.version>1.79</bouncycastle.version>
+        <thymeleaf.version>3.1.4.RELEASE</thymeleaf.version>
+        <jakarta.mail.version>2.0.4</jakarta.mail.version>
 
         <!-- Testing -->
         <testcontainers.version>1.20.4</testcontainers.version>
@@ -215,6 +217,23 @@
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-core</artifactId>
                 <version>${tomcat.version}</version>
+            </dependency>
+
+            <!-- Security: override vulnerable template/mail transitive dependencies -->
+            <dependency>
+                <groupId>org.thymeleaf</groupId>
+                <artifactId>thymeleaf-spring6</artifactId>
+                <version>${thymeleaf.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.thymeleaf</groupId>
+                <artifactId>thymeleaf</artifactId>
+                <version>${thymeleaf.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.angus</groupId>
+                <artifactId>jakarta.mail</artifactId>
+                <version>${jakarta.mail.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
