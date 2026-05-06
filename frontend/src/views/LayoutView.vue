@@ -3,25 +3,30 @@
     <header class="layout-header">
       <div class="header-brand">Aurora LowCode</div>
       <nav class="header-nav">
-        <router-link to="/dashboard">Dashboard</router-link>
-        <router-link to="/forms">Forms</router-link>
-        <router-link to="/reports">Reports</router-link>
-        <router-link to="/workflows">Workflows</router-link>
+        <router-link to="/dashboard">{{ t('nav.dashboard') }}</router-link>
+        <router-link to="/forms">{{ t('nav.forms') }}</router-link>
+        <router-link to="/reports">{{ t('nav.reports') }}</router-link>
+        <router-link to="/workflows">{{ t('nav.workflows') }}</router-link>
+        <router-link to="/settings">{{ t('nav.settings') }}</router-link>
       </nav>
       <div class="header-actions">
         <span class="user-info">{{ authStore.username }}</span>
-        <button @click="authStore.logout()" class="logout-btn">Logout</button>
+        <button @click="authStore.logout()" class="logout-btn">{{ t('nav.logout') }}</button>
       </div>
     </header>
     <main class="layout-main">
       <router-view />
     </main>
+    <AICopilotPanel />
   </div>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
+import AICopilotPanel from '@/components/copilot/AICopilotPanel.vue'
 
+const { t } = useI18n()
 const authStore = useAuthStore()
 </script>
 
