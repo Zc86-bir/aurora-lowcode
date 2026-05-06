@@ -6,19 +6,19 @@
         <input
           v-model="username"
           type="text"
-          placeholder="Email"
+          :placeholder="t('auth.login.username')"
           autocomplete="username"
           required
         />
         <input
           v-model="password"
           type="password"
-          placeholder="Password"
+          :placeholder="t('auth.login.password')"
           autocomplete="current-password"
           required
         />
         <button type="submit" :disabled="loading">
-          {{ loading ? 'Signing in...' : 'Sign In' }}
+          {{ loading ? '...' : t('auth.login.submit') }}
         </button>
         <p v-if="error" class="error">{{ error }}</p>
       </form>
@@ -28,8 +28,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 
+const { t } = useI18n()
 const authStore = useAuthStore()
 
 const username = ref('')
@@ -44,10 +46,10 @@ async function handleLogin() {
   try {
     const success = await authStore.login(username.value, password.value)
     if (!success) {
-      error.value = 'Invalid credentials'
+      error.value = t('auth.login.failed')
     }
   } catch {
-    error.value = 'Network error'
+    error.value = t('error.network')
   } finally {
     loading.value = false
   }

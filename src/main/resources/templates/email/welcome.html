@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to Aurora</title>
+</head>
+<body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background: #3b82f6; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0;">Welcome to Aurora LowCode</h1>
+    </div>
+    <div style="background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb;">
+        <p>Hello <strong th:text="${username}">User</strong>,</p>
+        <p>Your account has been created successfully. You can now start building
+           enterprise applications with natural language.</p>
+        <p style="color: #6b7280; font-size: 0.875rem;">
+            Tenant: <span th:text="${tenantCode}">N/A</span><br>
+            Role: <span th:text="${role}">User</span>
+        </p>
+    </div>
+    <div style="text-align: center; padding: 10px; color: #9ca3af; font-size: 0.75rem;">
+        Aurora LowCode Platform &copy; 2026
+    </div>
+</body>
+</html>

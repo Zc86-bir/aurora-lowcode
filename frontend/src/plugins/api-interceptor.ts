@@ -1,14 +1,14 @@
 /**
- * API Interceptor — auto-injects Authorization and X-Tenant-Id headers
+ * API Interceptor — auto-injects Authorization, X-Tenant-Id, and Accept-Language
  * into all fetch requests made through the generated API client.
  *
  * This plugin patches the global fetch to ensure every API call
- * carries the current auth token and tenant context.
+ * carries the current auth token, tenant context, and locale.
  */
 
 const originalFetch = window.fetch
 
-window.fetch = async function interceptedFetch(
+export async function interceptedFetch(
   input: RequestInfo | URL,
   init?: RequestInit
 ): Promise<Response> {
@@ -25,14 +25,24 @@ window.fetch = async function interceptedFetch(
     headers.set('X-Tenant-Id', tenantId)
   }
 
+  // Inject Accept-Language for i18n
+  if (!headers.has('Accept-Language')) {
+    const locale = localStorage.getItem('aurora_locale') || navigator.language
+    headers.set('Accept-Language', locale)
+  }
+
   const response = await originalFetch(input, { ...init, headers })
 
   // Auto-logout on 401
   if (response.status === 401) {
     localStorage.removeItem('auth_token')
     localStorage.removeItem('tenant_id')
-    window.location.href = '/login'
+    // Use dynamic import to avoid circular dependency
+    const { default: router } = await import('@/router')
+    router.push('/login')
   }
 
   return response
 }
+
+window.fetch = interceptedFetch

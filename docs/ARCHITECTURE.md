@@ -285,7 +285,7 @@ Entry 2: hash_2 = SHA256(hash_1 + content_2)
 
 ## 五、全部文件清单
 
-### 5.1 Java 后端（70 个文件）
+### 5.1 Java 后端（78 个文件）
 
 #### Architecture（8 个）
 
@@ -349,17 +349,20 @@ Entry 2: hash_2 = SHA256(hash_1 + content_2)
 | `BusinessRuleEngine.java` | `ai/` | 4 种规则类型（Sealed） |
 | `SkillTelemetry.java` | `ai/` | Micrometer 指标 + 成本估算 + recordLlmCall() |
 
-#### Adapter（5 个）
+#### Adapter（8 个）
 
 | 文件 | 路径 | 功能 |
 |------|------|------|
 | `ApiGatewayController.java` | `adapter/web/` | 15+ REST 端点 + 输入校验 |
 | `AuthController.java` | `adapter/web/` | 登录/登出/用户信息端点 |
+| `I18nController.java` | `adapter/web/` | 国际化消息端点 |
 | `JwtAuthenticationFilter.java` | `adapter/security/` | JWT 认证过滤器 + Token 黑名单 |
 | `SecurityFilterChainConfig.java` | `adapter/security/` | Spring Security 无状态配置 |
 | `McpSecurityFilter.java` | `adapter/mcp/` | MCP 端点 JWT 认证（委托 JwtTokenProvider） |
+| `YjsWebSocketHandler.java` | `adapter/websocket/` | Yjs 二进制协议处理 |
+| `WebSocketAuthInterceptor.java` | `adapter/websocket/` | WebSocket 握手 JWT 验证 |
 
-#### Infrastructure（23 个）
+#### Infrastructure（28 个）
 
 | 文件 | 路径 | 功能 |
 |------|------|------|
@@ -386,6 +389,10 @@ Entry 2: hash_2 = SHA256(hash_1 + content_2)
 | `LlmRoutingAutoConfiguration.java` | `infrastructure/ai/` | Spring Auto-Config |
 | `LlmGatewayService.java` | `infrastructure/ai/` | LLM 调用网关 + retry + 成本估算 |
 | `MockLlmGateway.java` | `infrastructure/ai/` | @Profile("test") 测试替身 |
+| `I18nConfig.java` | `infrastructure/config/` | MessageSource + LocaleResolver |
+| `WebSocketConfig.java` | `infrastructure/config/` | WebSocket 端点注册 |
+| `DocumentRoomManager.java` | `infrastructure/collaboration/` | WebSocket 房间管理 |
+| `EmailNotificationService.java` | `infrastructure/notification/` | Thymeleaf + StructuredTaskScope 超时 |
 
 #### JPA Entity（4 个）
 
@@ -405,7 +412,7 @@ Entry 2: hash_2 = SHA256(hash_1 + content_2)
 | `SkillRegistryJpa.java` | `infrastructure/database/repository/` | JeecgBoot 兼容 + category 查询 |
 | `AuditChainJpa.java` | `infrastructure/database/repository/` | seqNum 查询 + 时间范围 |
 
-### 5.2 前端（24 个文件）
+### 5.2 前端（29 个文件）
 
 | 文件 | 路径 | 功能 |
 |------|------|------|
@@ -416,7 +423,10 @@ Entry 2: hash_2 = SHA256(hash_1 + content_2)
 | `router/index.ts` | `src/router/` | 动态路由懒加载 + auth 守卫 |
 | `stores/auth.ts` | `src/stores/` | Pinia auth store + JWT 解码 + 过期检查 |
 | `stores/tenant.ts` | `src/stores/` | Pinia tenant store |
-| `plugins/api-interceptor.ts` | `src/plugins/` | fetch 拦截器：自动注入 Authorization + X-Tenant-Id |
+| `plugins/api-interceptor.ts` | `src/plugins/` | fetch 拦截器：自动注入 Authorization + X-Tenant-Id + Accept-Language |
+| `i18n/index.ts` | `src/i18n/` | vue-i18n 配置 + 浏览器语言检测 |
+| `i18n/locales/en.ts` | `src/i18n/locales/` | 前端英文翻译 |
+| `i18n/locales/zh-CN.ts` | `src/i18n/locales/` | 前端中文翻译 |
 | `api/client.ts` | `src/api/` | API 客户端配置（token/tenant 注入） |
 | `api/README.md` | `src/api/` | 使用规范 |
 | `useServerState.ts` | `composables/` | TanStack Query 封装 |
@@ -1029,23 +1039,108 @@ LlmGatewayService.call(prompt)
 
 ---
 
+## 十三、PHASE 7 架构治理与企业级补全
+
+### 13.1 ArchUnit 架构守护
+
+```
+ArchitectureTest
+    ├── layeredArchitecture(): adapter → application → domain ← infrastructure
+    ├── domainShouldNotDependOnInfrastructure()
+    ├── applicationShouldNotUseJpaRepository()
+    └── contractShouldNotDependOnInfrastructure()
+
+LayerDependencyTest
+    ├── domainShouldNotDependOnInfrastructure/Adapter()
+    ├── applicationShouldNotAccessJpaRepositories/Adapter()
+    └── infrastructureShouldNotDependOnAdapter/Application()
+
+Java25RedLineTest
+    ├── noThreadLocalUsage() — 禁止 ThreadLocal
+    └── noCompletableFutureUsage() — 禁止 CompletableFuture
+
+NamingConventionTest
+    ├── entitiesShouldBeInCorrectPackage() — *Entity → database.entity
+    ├── controllersShouldBeInCorrectPackage() — *Controller → adapter.web
+    ├── filtersShouldBeInAdapterLayer() — *Filter → adapter/config
+    └── configClassesShouldBeInCorrectPackage() — *Config → infrastructure.config
+
+OpenApiAnnotationTest
+    ├── controllerMethodsMustHaveOperationAnnotation()
+    └── controllerMethodsMustHaveApiResponseAnnotation()
+```
+
+### 13.2 I18N 国际化
+
+```
+HTTP Request
+    │
+    ├── Header: Accept-Language: zh-CN
+    │
+    ▼
+I18nController
+    │ GET /api/v1/i18n/zh-CN
+    │ → MessageSource.getMessage("auth.login.failed", Locale.SIMPLIFIED_CHINESE)
+    │
+    ▼
+Response: { "auth.login.failed": "用户名或密码错误", ... }
+```
+
+**前端**：vue-i18n + navigator.language 自动检测 + localStorage 持久化
+
+### 13.3 邮件通知
+
+```
+EmailNotificationService.sendTemplateEmail(to, subject, template, vars)
+    │
+    ├── StructuredTaskScope（15s 超时）
+    │   └── JavaMailSender.send()
+    │
+    ├── Thymeleaf TemplateEngine.process("email/" + template)
+    │   └── 变量注入 → HTML 渲染
+    │
+    └── AuditLogger.logCustom(type=EMAIL_SENT, traceId, recipient, status)
+```
+
+### 13.4 WebSocket 协同
+
+```
+Client (y-websocket)
+    │
+    ├── GET /ws/collaborate?documentId=xxx&token=jwt
+    │   └── WebSocketAuthInterceptor → JWT 验证 → tenantId/userId/documentId
+    │
+    ├── Binary WebSocket Connection
+    │   └── YjsWebSocketHandler
+    │       ├── MSG_SYNC (0) → 广播同步数据
+    │       └── MSG_AWARENESS (1) → 广播光标/选区
+    │
+    └── DocumentRoomManager
+        ├── ConcurrentHashMap<"tenantId:documentId", CopyOnWriteArraySet<Session>>
+        ├── joinRoom() / leaveRoom() / broadcastToRoom()
+        └── 定时清理空房间（60s）
+```
+
+---
+
 ## 附录：完整统计
 
 | 指标 | 数值 |
 |------|------|
-| Java 后端文件 | 70 |
-| 前端文件 | 24 |
+| Java 后端文件 | 78 |
+| 前端文件 | 29 |
 | Skill YAML | 13（10 JeecgBoot + 3 通用） |
 | Flyway 迁移 | 3 |
 | 集成测试 | 5（53 个用例） |
-| 单元测试 | 4（18 个用例：JwtTokenProvider 13 + LlmGateway 5） |
+| 单元测试 | 7（36 个用例：ArchUnit 20 + JwtTokenProvider 13 + LlmGateway 5） |
+| E2E 测试 | 2（login-flow + dashboard-render） |
 | Docker/K8s | 12（Dockerfile + compose + Helm Chart） |
-| CI/CD | 2（ci.yml + cd.yml） |
-| 工程化 | 3（Makefile + BOOTSTRAP.md + verify.sh） |
+| CI/CD | 2（ci.yml 6 jobs + cd.yml） |
+| 工程化 | 4（Makefile + BOOTSTRAP.md + verify.sh + sync-api.sh） |
 | Prompt 模板 | 2 |
 | ADR 文档 | 4 |
 | 审查报告 | 12 |
-| **总计** | **~140** |
+| **总计** | **~155** |
 
 ### 代码统计
 
@@ -1053,13 +1148,16 @@ LlmGatewayService.call(prompt)
 |------|------|
 | Sealed Interfaces | 7（63 个 permits） |
 | Record 类型 | 40+ |
-| REST API 端点 | 18+（含 /auth/login, /auth/logout, /auth/me） |
+| REST API 端点 | 20+（含 /auth/login, /auth/logout, /auth/me, /api/v1/i18n/{locale}） |
+| WebSocket 端点 | 1（/ws/collaborate） |
 | 数据库表 | 19（11 核心 + 8 JeecgBoot） |
 | JPA Entity | 4（Metadata, Tenant, SkillRegistry, AuditChain） |
 | JPA Repository | 4 |
 | 安全规则 | 50+ |
 | 业务规则 | 40+ |
-| 测试用例 | 71（53 集成 + 18 单元） |
+| 测试用例 | 91（53 集成 + 36 单元 + 2 E2E） |
+| I18N 语言 | 2（英文 + 简体中文） |
+| 邮件模板 | 2（welcome + password-reset） |
 
 ### 编译状态
 
@@ -1070,5 +1168,6 @@ Spring Boot: 3.5.0
 Spring Framework: 6.3.0
 Spring Security: 6.5.0
 SpotBugs: 0 bugs
+ArchUnit: 1.4.0 (20 tests)
 JaCoCo: 0.8.13（支持 JDK 25）
 ```

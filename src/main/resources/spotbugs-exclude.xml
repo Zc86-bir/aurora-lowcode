@@ -191,4 +191,10 @@
         <Class name="~com\.aurora\.core\.infrastructure\.security\.JwtTokenProvider"/>
     </Match>
 
+    <!-- THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION: EmailNotificationService doSend wraps checked exceptions -->
+    <Match>
+        <Bug pattern="THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION"/>
+        <Class name="~com\.aurora\.core\.infrastructure\.notification\.EmailNotificationService"/>
+    </Match>
+
 </FindBugsFilter>
