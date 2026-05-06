@@ -86,13 +86,13 @@ public class KnowledgeIngestionService {
     }
 
     @Transactional
-    void transitionStatus(KnowledgeDocumentEntity document, String newStatus) {
+    public void transitionStatus(KnowledgeDocumentEntity document, String newStatus) {
         document.setStatus(newStatus);
         documentRepository.save(document);
     }
 
     @Transactional
-    void markFailed(UUID documentId, String message) {
+    public void markFailed(UUID documentId, String message) {
         documentRepository.findById(documentId).ifPresent(doc -> {
             doc.setStatus("FAILED");
             doc.setFailureMessage(message != null && message.length() > 1024

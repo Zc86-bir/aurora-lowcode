@@ -4,6 +4,7 @@ import com.aurora.core.contract.TenantContext;
 import com.aurora.core.infrastructure.database.entity.KnowledgeDocumentEntity;
 import com.aurora.core.infrastructure.database.repository.KnowledgeDocumentRepositoryJpa;
 import com.aurora.core.infrastructure.knowledge.KnowledgeIngestionService;
+import com.aurora.core.infrastructure.webhook.UrlValidator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -22,6 +23,7 @@ import java.time.Instant;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Tag(name = "Knowledge Base", description = "Enterprise knowledge document ingestion and management")
@@ -30,6 +32,8 @@ import java.util.UUID;
 public class KnowledgeBaseController {
 
     private static final Logger log = LoggerFactory.getLogger(KnowledgeBaseController.class);
+    private static final long MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+    private static final Set<String> VALID_SCOPES = Set.of("TENANT", "PROJECT", "MODULE");
 
     private final KnowledgeDocumentRepositoryJpa documentRepository;
     private final KnowledgeIngestionService ingestionService;
@@ -65,6 +69,12 @@ public class KnowledgeBaseController {
 
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "File is empty"));
+        }
+        if (file.getSize() > MAX_FILE_SIZE) {
+            return ResponseEntity.badRequest().body(Map.of("error", "File exceeds 50MB limit"));
+        }
+        if (!VALID_SCOPES.contains(scope)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid scope. Must be TENANT, PROJECT, or MODULE"));
         }
 
         try {
@@ -116,8 +126,16 @@ public class KnowledgeBaseController {
         if (url == null || url.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "URL is required"));
         }
+        try {
+            UrlValidator.validate(url, false);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
 
         String scope = body.getOrDefault("scope", "TENANT");
+        if (!VALID_SCOPES.contains(scope)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid scope"));
+        }
         String projectId = body.get("projectId");
         String moduleId = body.get("moduleId");
         String visibilityPolicy = body.getOrDefault("visibilityPolicy", "authenticated");

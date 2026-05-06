@@ -6,20 +6,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.sql.Array;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-/**
- * Tenant-Aware Vector Store — the ONLY allowed vector retrieval boundary.
- *
- * <p>Forces tenant_id, knowledge_scope, and visibility_policy filters on every
- * similarity search. No caller may execute raw vector queries outside this class.
- *
- * <p>Uses direct JDBC because Spring AI's PgVectorStore metadata-filter API
- * does not provide strong enough guarantees for mandatory tenant injection.
- */
 @Component
 public class TenantAwareVectorStore {
 
@@ -36,12 +28,8 @@ public class TenantAwareVectorStore {
     /**
      * Execute a tenant-scoped similarity search.
      *
-     * @param embedding            embedding vector as float array
-     * @param topK                 max results
-     * @param similarityThreshold  minimum cosine distance converted to similarity (0..1)
-     * @param allowedScopes        permitted knowledge_scope values (TENANT, PROJECT, MODULE)
-     * @param visibilityPolicies   permitted visibility_policy values
-     * @return ordered search results (MODULE > PROJECT > TENANT, then by similarity DESC)
+     * Uses PostgreSQL array binding (ANY(?)) to prevent SQL injection
+     * through scope and policy sets.
      */
     public List<SearchResult> similaritySearch(double[] embedding, int topK,
                                                 double similarityThreshold,
@@ -52,13 +40,6 @@ public class TenantAwareVectorStore {
             throw new IllegalStateException("Tenant context required for vector search");
         }
 
-        String scopeList = allowedScopes.stream()
-                .map(s -> "'" + s.replace("'", "''") + "'")
-                .collect(Collectors.joining(","));
-        String policyList = visibilityPolicies.stream()
-                .map(p -> "'" + p.replace("'", "''") + "'")
-                .collect(Collectors.joining(","));
-
         String embeddingStr = "[" + doubleArrayToString(embedding) + "]";
 
         String sql = """
@@ -66,8 +47,8 @@ public class TenantAwareVectorStore {
                    1 - (embedding <=> ?::vector) AS similarity
             FROM vector_store
             WHERE tenant_id = ?
-              AND knowledge_scope IN (%s)
-              AND visibility_policy IN (%s)
+              AND knowledge_scope = ANY(?)
+              AND visibility_policy = ANY(?)
               AND 1 - (embedding <=> ?::vector) >= ?
             ORDER BY CASE knowledge_scope
                      WHEN 'MODULE' THEN 0
@@ -76,7 +57,7 @@ public class TenantAwareVectorStore {
                      END,
                      embedding <=> ?::vector ASC
             LIMIT ?
-            """.formatted(scopeList, policyList);
+            """;
 
         log.debug("Vector search: tenant={} topK={} threshold={}", tenantId, topK, similarityThreshold);
 
@@ -85,10 +66,12 @@ public class TenantAwareVectorStore {
                 ps -> {
                     ps.setString(1, embeddingStr);
                     ps.setObject(2, tenantId);
-                    ps.setString(3, embeddingStr);
-                    ps.setDouble(4, similarityThreshold);
+                    ps.setArray(3, toSqlArray(allowedScopes));
+                    ps.setArray(4, toSqlArray(visibilityPolicies));
                     ps.setString(5, embeddingStr);
-                    ps.setInt(6, topK);
+                    ps.setDouble(6, similarityThreshold);
+                    ps.setString(7, embeddingStr);
+                    ps.setInt(8, topK);
                 },
                 (rs, rowNum) -> new SearchResult(
                         rs.getString("content"),
@@ -98,6 +81,15 @@ public class TenantAwareVectorStore {
                         rs.getDouble("similarity")
                 )
         );
+    }
+
+    private Array toSqlArray(Set<String> values) {
+        try {
+            return jdbcTemplate.getDataSource().getConnection()
+                    .createArrayOf("text", values.toArray(new String[0]));
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to create SQL array", e);
+        }
     }
 
     private static String doubleArrayToString(double[] arr) {

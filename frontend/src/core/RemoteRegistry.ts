@@ -20,3 +20,9 @@ export const remoteRegistry: RemoteDefinition[] = []
 export function getEnabledRemotes(): RemoteDefinition[] {
   return remoteRegistry.filter((r) => r.enabled)
 }
+
+export function getRemotesForTenant(tenantId: string): RemoteDefinition[] {
+  return remoteRegistry.filter(
+    (r) => r.enabled && (!r.allowedTenants || r.allowedTenants.includes(tenantId))
+  )
+}
