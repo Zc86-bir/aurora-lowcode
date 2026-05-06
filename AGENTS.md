@@ -100,7 +100,7 @@ No hand-written fetch/Axios — always use generated SDK.
 
 ## Env Vars
 
-`JWT_SECRET`, `DATABASE_PASSWORD`, `REDIS_PASSWORD`, `OSS_ACCESS_KEY_ID`, `OSS_ACCESS_KEY_SECRET`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `NVD_API_KEY`, `MAIL_USERNAME`, `MAIL_PASSWORD`.
+`JWT_SECRET`, `DATABASE_PASSWORD`, `REDIS_PASSWORD`, `OSS_ACCESS_KEY_ID`, `OSS_ACCESS_KEY_SECRET`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `NVD_API_KEY`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `SEARCH_ENABLED`.
 
 ## CI
 
@@ -128,3 +128,4 @@ No hand-written fetch/Axios — always use generated SDK.
 - OWASP OSS Index Analyzer disabled (`<ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>`).
 - `testcontainers-redis` module not available — use generic container if needed.
 - Mockito inline mocking is built-in (no `mockito-inline` dependency needed).
+- Web search via opencli: `aurora.search.enabled=true` (disabled by default). Registers `web_search` and `web_fetch` MCP tools.

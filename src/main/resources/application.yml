@@ -331,6 +331,12 @@ aurora:
     email:
       enabled: ${NOTIFICATION_EMAIL_ENABLED:false}
 
+  # ====================
+  # Web Search (opencli)
+  # ====================
+  search:
+    enabled: ${SEARCH_ENABLED:false}
+
 spring:
   mail:
     host: ${MAIL_HOST:localhost}

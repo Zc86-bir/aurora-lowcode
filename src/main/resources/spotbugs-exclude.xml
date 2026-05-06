@@ -197,4 +197,10 @@
         <Class name="~com\.aurora\.core\.infrastructure\.notification\.EmailNotificationService"/>
     </Match>
 
+    <!-- THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION: WebSearchService executeOpencli wraps checked exceptions -->
+    <Match>
+        <Bug pattern="THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION"/>
+        <Class name="~com\.aurora\.core\.infrastructure\.search\.WebSearchService"/>
+    </Match>
+
 </FindBugsFilter>
