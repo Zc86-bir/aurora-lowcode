@@ -80,6 +80,12 @@ router.beforeEach((to) => {
     return true
   }
 
+  // Dev mode: auto-login with demo token
+  if (import.meta.env.DEV && !authStore.isAuthenticated) {
+    authStore.setToken('dev-demo-token-for-local-ui-development')
+    return true
+  }
+
   if (!authStore.isAuthenticated) {
     return `/login?redirect=${encodeURIComponent(to.fullPath)}`
   }
