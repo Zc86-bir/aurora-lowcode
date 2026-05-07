@@ -1,35 +1,46 @@
 <template>
-  <div class="dashboard">
-    <h2>{{ t('dashboard.title') }}</h2>
-
-    <div class="status-bar">
-      <span class="status-indicator" :class="healthStatus === 'UP' ? 'up' : 'down'" />
-      <span>{{ t('dashboard.systemStatus') }}: {{ healthStatus ?? 'OFFLINE (dev)' }}</span>
+  <div class="page">
+    <div class="page-header">
+      <h2>{{ t('dashboard.title') }}</h2>
+      <div class="status-bar">
+        <span class="status-indicator" :class="healthStatus === 'UP' ? 'up' : 'down'" />
+        <span class="status-text">{{ healthStatus ?? 'OFFLINE (dev)' }}</span>
+      </div>
     </div>
 
     <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">{{ t('dashboard.cachedMetadata') }}</div>
-        <div class="stat-value">{{ stats.cachedItems }}</div>
+      <div class="card stat-card">
+        <div class="stat-icon bg-blue">◎</div>
+        <div>
+          <div class="stat-label">{{ t('dashboard.cachedMetadata') }}</div>
+          <div class="stat-value">{{ stats.cachedItems }}</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">{{ t('dashboard.totalReloads') }}</div>
-        <div class="stat-value">{{ stats.totalReloads }}</div>
+      <div class="card stat-card">
+        <div class="stat-icon bg-green">↻</div>
+        <div>
+          <div class="stat-label">{{ t('dashboard.totalReloads') }}</div>
+          <div class="stat-value">{{ stats.totalReloads }}</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">{{ t('dashboard.reloadErrors') }}</div>
-        <div class="stat-value">{{ stats.totalFailures }}</div>
+      <div class="card stat-card">
+        <div class="stat-icon bg-yellow">⚠</div>
+        <div>
+          <div class="stat-label">{{ t('dashboard.reloadErrors') }}</div>
+          <div class="stat-value">{{ stats.totalFailures }}</div>
+        </div>
       </div>
-      <div class="stat-card highlight">
-        <div class="stat-label">{{ t('dashboard.aiGeneration') }}</div>
-        <div class="stat-value">
-          <button class="action-btn" @click="openCopilot">{{ t('dashboard.newWithAI') }}</button>
+      <div class="card stat-card highlight">
+        <div class="stat-icon">✦</div>
+        <div>
+          <div class="stat-label">{{ t('dashboard.aiGeneration') }}</div>
+          <button class="btn btn-primary btn-sm" @click="openCopilot">{{ t('dashboard.newWithAI') }}</button>
         </div>
       </div>
     </div>
 
-    <div v-if="backendError" class="error-banner">
-      {{ t('common.couldNotReachBackend') }}
+    <div v-if="backendError" class="card notice-bar">
+      ⚡ {{ t('common.couldNotReachBackend') }}
     </div>
   </div>
 </template>
@@ -54,19 +65,11 @@ onMounted(async () => {
   } catch {
     backendError.value = true
   }
-
   try {
     const meta = await fetch('/api/v1/metadata/stats').then(r => r.json())
-    if (meta?.data) {
-      stats.value = meta.data
-    } else if (isDev()) {
-      stats.value = DEV_STATS
-    }
+    stats.value = meta?.data || (isDev() ? DEV_STATS : stats.value)
   } catch {
-    if (isDev()) {
-      stats.value = DEV_STATS
-      backendError.value = true
-    }
+    if (isDev()) { stats.value = DEV_STATS; backendError.value = true }
   }
 })
 
@@ -76,86 +79,24 @@ function openCopilot() {
 </script>
 
 <style scoped>
-.dashboard h2 {
-  margin-bottom: 0.75rem;
-  color: #1f2937;
-}
+.status-bar { display: flex; align-items: center; gap: 0.5rem; }
+.status-indicator { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; }
+.status-indicator.up { background: var(--color-success); }
+.status-indicator.down { background: var(--color-error); }
+.status-text { font-size: var(--text-xs); color: var(--color-text-secondary); }
 
-.status-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8125rem;
-  color: #6b7280;
-  margin-bottom: 1.5rem;
-}
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-md); }
 
-.status-indicator {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #d1d5db;
-}
-.status-indicator.up { background: #10b981; }
-.status-indicator.down { background: #ef4444; }
+.stat-card { display: flex; align-items: center; gap: var(--space-md); }
+.stat-card.highlight { border-color: var(--color-primary); background: var(--color-primary-light); }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-}
+.stat-icon { width: 40px; height: 40px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.125rem; background: #f1f5f9; flex-shrink: 0; }
+.stat-icon.bg-blue { background: #dbeafe; color: var(--color-primary); }
+.stat-icon.bg-green { background: var(--color-success-light); color: var(--color-success); }
+.stat-icon.bg-yellow { background: var(--color-warning-light); color: var(--color-warning); }
 
-.stat-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
+.stat-label { font-size: var(--text-xs); color: var(--color-text-secondary); margin-bottom: 2px; }
+.stat-value { font-size: var(--text-2xl); font-weight: 700; color: var(--color-text); }
 
-.stat-card.highlight {
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  border: 1px solid #bfdbfe;
-}
-
-.stat-label {
-  font-size: 0.75rem;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin-top: 0.25rem;
-}
-
-.action-btn {
-  all: unset;
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #2563eb;
-  background: white;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  border: 1px solid #bfdbfe;
-  margin-top: 0.25rem;
-}
-
-.action-btn:hover {
-  background: #2563eb;
-  color: white;
-}
-
-.error-banner {
-  margin-top: 1rem;
-  padding: 0.75rem 1rem;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 6px;
-  color: #dc2626;
-  font-size: 0.8125rem;
-}
+.notice-bar { margin-top: var(--space-lg); padding: var(--space-md) var(--space-lg); background: var(--color-warning-light); border: 1px solid #fde68a; color: #92400e; font-size: var(--text-sm); }
 </style>

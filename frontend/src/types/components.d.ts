@@ -11,6 +11,7 @@ declare module 'vue' {
     BpmnViewer: typeof import('./../components/workflow/BpmnViewer.vue')['default']
     DataTable: typeof import('./../components/data/DataTable.vue')['default']
     DynamicForm: typeof import('./../components/form/DynamicForm.vue')['default']
+    ErrorBoundary: typeof import('./../components/shared/ErrorBoundary.vue')['default']
     FormFieldRenderer: typeof import('./../components/form/FormFieldRenderer.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
