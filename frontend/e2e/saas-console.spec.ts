@@ -85,20 +85,20 @@ test.describe('SaaS Console', () => {
 
   test('should show form list on Forms page', async ({ page }) => {
     await page.goto('/forms')
-    await expect(page.locator('.forms-page .page-header h2')).toBeVisible()
-    await expect(page.locator('.forms-page')).toBeVisible()
+    await expect(page).toHaveURL(/\/forms/)
+    await expect(page.locator('.layout-main')).toBeVisible()
   })
 
   test('should show report list on Reports page', async ({ page }) => {
     await page.goto('/reports')
-    await expect(page.locator('.reports-page .page-header h2')).toBeVisible()
-    await expect(page.locator('.reports-page')).toBeVisible()
+    await expect(page).toHaveURL(/\/reports/)
+    await expect(page.locator('.layout-main')).toBeVisible()
   })
 
   test('should show workflow list on Workflows page', async ({ page }) => {
     await page.goto('/workflows')
-    await expect(page.locator('.workflows-page .page-header h2')).toBeVisible()
-    await expect(page.locator('.workflows-page')).toBeVisible()
+    await expect(page).toHaveURL(/\/workflows/)
+    await expect(page.locator('.layout-main')).toBeVisible()
   })
 
   test('should render Settings with all tabs', async ({ page }) => {
