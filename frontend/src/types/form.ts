@@ -1,7 +1,7 @@
 export interface FormField {
   name: string
-  label: string
-  type: 'text' | 'email' | 'number' | 'password' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'date'
+  label?: string
+  type: string
   required?: boolean
   disabled?: boolean
   placeholder?: string

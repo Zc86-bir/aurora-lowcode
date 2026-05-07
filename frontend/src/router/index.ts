@@ -40,6 +40,12 @@ const coreRoutes: RouteRecordRaw[] = [
         name: 'Settings',
         component: () => import('@/views/SettingsView.vue'),
       },
+      {
+        path: 'generate',
+        name: 'Generate',
+        component: () => import('@/views/GenerateView.vue'),
+        meta: { roles: ['ADMIN'] },
+      },
     ],
   },
 ]
@@ -88,6 +94,12 @@ router.beforeEach((to) => {
 
   if (!authStore.isAuthenticated) {
     return `/login?redirect=${encodeURIComponent(to.fullPath)}`
+  }
+
+  // Role-based guard
+  const requiredRoles = to.meta.roles as string[] | undefined
+  if (requiredRoles?.length && !requiredRoles.some(r => authStore.roles.includes(r))) {
+    return '/dashboard'
   }
 
   return true

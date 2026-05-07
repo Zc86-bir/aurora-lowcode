@@ -49,7 +49,7 @@
           :for="field.name"
           class="block text-sm font-medium text-primary mb-1"
         >
-          {{ field.label }}
+          {{ field.label || field.name }}
           <span v-if="field.required" class="text-danger-500 ml-1" aria-hidden="true">*</span>
         </label>
 
@@ -237,7 +237,7 @@ function validateForm(fields: FormField[], data: Record<string, unknown>): Recor
   for (const field of fields) {
     const value = data[field.name]
     if (field.required && (!value || String(value).trim() === '')) {
-      errors[field.name] = `${field.label} is required`
+      errors[field.name] = `${field.label || field.name} is required`
       continue
     }
     if (value && field.maxLength && String(value).length > field.maxLength) {

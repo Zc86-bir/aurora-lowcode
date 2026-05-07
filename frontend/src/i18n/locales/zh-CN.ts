@@ -17,6 +17,7 @@ export default {
     reports: '\u62A5\u8868',
     workflows: '\u5DE5\u4F5C\u6D41',
     settings: '\u8BBE\u7F6E',
+    generate: '\u751F\u6210',
     logout: '\u767B\u51FA',
   },
   dashboard: {
@@ -89,5 +90,10 @@ export default {
     internal: '\u670D\u52A1\u5668\u5185\u90E8\u9519\u8BEF',
     notFound: '\u8D44\u6E90\u672A\u627E\u5230',
     network: '\u7F51\u7EDC\u9519\u8BEF',
+  },
+  generate: {
+    title: '\u4EE3\u7801\u751F\u6210\u5668',
+    crud: 'CRUD \u751F\u6210',
+    app: '\u667A\u80FD\u5E94\u7528\u751F\u6210 (AI)',
   },
 }

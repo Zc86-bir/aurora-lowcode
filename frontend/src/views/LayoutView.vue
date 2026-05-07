@@ -7,6 +7,7 @@
         <router-link to="/forms">{{ t('nav.forms') }}</router-link>
         <router-link to="/reports">{{ t('nav.reports') }}</router-link>
         <router-link to="/workflows">{{ t('nav.workflows') }}</router-link>
+        <router-link to="/generate">{{ t('nav.generate') }}</router-link>
         <router-link to="/settings">{{ t('nav.settings') }}</router-link>
       </nav>
       <div class="header-actions">
@@ -15,7 +16,14 @@
       </div>
     </header>
     <main class="layout-main">
-      <router-view />
+      <ErrorBoundary>
+        <Suspense>
+          <router-view />
+          <template #fallback>
+            <div class="loading-page">Loading...</div>
+          </template>
+        </Suspense>
+      </ErrorBoundary>
     </main>
     <AICopilotPanel />
   </div>
@@ -25,6 +33,7 @@
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import AICopilotPanel from '@/components/copilot/AICopilotPanel.vue'
+import ErrorBoundary from '@/components/shared/ErrorBoundary.vue'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
@@ -95,9 +104,12 @@ const authStore = useAuthStore()
   border-color: #6b7280;
 }
 
-.layout-main {
-  flex: 1;
-  padding: 1.5rem;
-  background: #f9fafb;
+.loading-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: #9ca3af;
+  font-size: 0.875rem;
 }
 </style>

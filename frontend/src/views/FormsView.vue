@@ -8,16 +8,16 @@
       </div>
     </div>
 
-    <template v-if="isPending">
+    <template v-if="loading && !items.length">
       <div v-for="i in 3" :key="i" class="skeleton-row" />
     </template>
 
-    <div v-else-if="isError" class="error-state">{{ t('common.error') }}: {{ error?.message }}</div>
+    <div v-else-if="error" class="error-state">{{ t('common.error') }}: {{ error }}</div>
 
     <DataTable
-      v-else-if="forms.length"
+      v-else-if="items.length"
       :columns="columns"
-      :data="forms"
+      :data="items"
       :title="t('forms.title')"
       searchable
     >
@@ -48,39 +48,25 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useGet } from '@/composables/useServerState'
+import { useAppForms } from '@/composables/useAppData'
 import DataTable from '@/components/data/DataTable.vue'
 import DynamicForm from '@/components/form/DynamicForm.vue'
-import type { FormSchema } from '@/types/form'
+import type { AppFormItem } from '@/api/dev-data'
 
 const { t } = useI18n()
 
-interface FormItem extends Record<string, unknown> {
-  id: string
-  name: string
-  type: string
-  version: number
-  status: string
-  createdAt: string
-  content?: FormSchema
-}
-
 const columns = computed(() => [
   { key: 'name', label: t('common.name'), sortable: true },
-  { key: 'version', label: t('common.version'), sortable: true },
   { key: 'status', label: t('common.status'), sortable: true },
+  { key: 'version', label: t('common.version'), sortable: true },
   { key: 'createdAt', label: t('common.created'), sortable: true },
 ])
 
-const { data, isPending, isError, error, refetch } = useGet<FormItem[]>('forms', '/api/v1/metadata', {
-  params: { category: 'form', type: 'FORM' },
-})
-const forms = computed(() => data.value || [])
-const previewItem = ref<FormItem | null>(null)
+const { items, loading, error, refresh } = useAppForms()
+const previewItem = ref<AppFormItem | null>(null)
 
-function refresh() { refetch() }
 function openCopilot() { window.dispatchEvent(new CustomEvent('copilot:open')) }
-function previewForm(row: Record<string, unknown>) { previewItem.value = row as FormItem }
+function previewForm(row: Record<string, unknown>) { previewItem.value = row as unknown as AppFormItem }
 </script>
 
 <style scoped>

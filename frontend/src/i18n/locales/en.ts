@@ -17,6 +17,7 @@ export default {
     reports: 'Reports',
     workflows: 'Workflows',
     settings: 'Settings',
+    generate: 'Generate',
     logout: 'Logout',
   },
   dashboard: {
@@ -89,5 +90,10 @@ export default {
     internal: 'Internal server error',
     notFound: 'Resource not found',
     network: 'Network error',
+  },
+  generate: {
+    title: 'Code Generator',
+    crud: 'CRUD Generator',
+    app: 'App Generator (AI)',
   },
 }
