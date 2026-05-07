@@ -21,10 +21,12 @@ export default {
   },
   dashboard: {
     title: '\u4EEA\u8868\u677F',
-    totalForms: '\u8868\u5355\u603B\u6570',
-    activeReports: '\u6D3B\u8DC3\u62A5\u8868',
-    workflows: '\u5DE5\u4F5C\u6D41',
-    aiGenerations: 'AI \u751F\u6210',
+    systemStatus: '\u7CFB\u7EDF\u72B6\u6001',
+    cachedMetadata: '\u5DF2\u7F13\u5B58\u5143\u6570\u636E',
+    totalReloads: '\u91CD\u65B0\u52A0\u8F7D\u6B21\u6570',
+    reloadErrors: '\u52A0\u8F7D\u9519\u8BEF',
+    aiGeneration: 'AI \u751F\u6210',
+    newWithAI: '\u7528 AI \u521B\u5EFA',
   },
   copilot: {
     title: 'AI \u667A\u80FD\u52A9\u624B',
@@ -81,6 +83,7 @@ export default {
     loading: '\u52A0\u8F7D\u4E2D...',
     error: '\u53D1\u751F\u9519\u8BEF',
     retry: '\u91CD\u8BD5',
+    couldNotReachBackend: '\u65E0\u6CD5\u8FDE\u63A5\u540E\u7AEF\u2014\u2014\u663E\u793A\u7F13\u5B58\u6570\u636E',
   },
   error: {
     internal: '\u670D\u52A1\u5668\u5185\u90E8\u9519\u8BEF',

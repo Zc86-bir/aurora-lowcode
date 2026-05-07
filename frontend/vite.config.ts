@@ -135,6 +135,11 @@ export default defineConfig(({ mode }) => {
         changeOrigin: true,
         secure: false,
       },
+      '/auth': {
+        target: API_BASE,
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 

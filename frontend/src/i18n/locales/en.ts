@@ -21,10 +21,12 @@ export default {
   },
   dashboard: {
     title: 'Dashboard',
-    totalForms: 'Total Forms',
-    activeReports: 'Active Reports',
-    workflows: 'Workflows',
-    aiGenerations: 'AI Generations',
+    systemStatus: 'System Status',
+    cachedMetadata: 'Cached Metadata',
+    totalReloads: 'Total Reloads',
+    reloadErrors: 'Reload Errors',
+    aiGeneration: 'AI Generation',
+    newWithAI: 'New with AI',
   },
   copilot: {
     title: 'AI Copilot',
@@ -81,6 +83,7 @@ export default {
     loading: 'Loading...',
     error: 'An error occurred',
     retry: 'Retry',
+    couldNotReachBackend: 'Could not reach backend — displaying cached data',
   },
   error: {
     internal: 'Internal server error',

@@ -40,7 +40,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function login(usernameInput: string, password: string): Promise<boolean> {
     try {
-      const response = await fetch('/api/v1/auth/login', {
+      const response = await fetch('/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: usernameInput, password }),
@@ -68,7 +68,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout() {
     try {
-      await fetch('/api/v1/auth/logout', {
+      await fetch('/auth/logout', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token.value}`,
