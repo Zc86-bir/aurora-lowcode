@@ -43,7 +43,8 @@ public class MetadataEntity {
     @Column(nullable = false, columnDefinition = "jsonb")
     private Map<String, Object> content;
 
-    @Column(nullable = false)
+    @Version
+    @Column(name = "version", nullable = false)
     private int version;
 
     @Column(nullable = false, length = 16)
@@ -69,9 +70,6 @@ public class MetadataEntity {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
-
-    @Version
-    private int versionLock;
 
     @PrePersist
     void prePersist() {
@@ -129,6 +127,4 @@ public class MetadataEntity {
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 
-    public int getVersionLock() { return versionLock; }
-    public void setVersionLock(int versionLock) { this.versionLock = versionLock; }
 }

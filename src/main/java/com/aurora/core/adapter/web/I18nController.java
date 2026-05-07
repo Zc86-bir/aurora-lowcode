@@ -34,7 +34,7 @@ public class I18nController {
     @Operation(summary = "Get all i18n messages for a locale")
     @ApiResponse(responseCode = "200", description = "Messages retrieved successfully")
     @GetMapping("/{locale}")
-    public ResponseEntity<Map<String, String>> getMessages(@PathVariable String locale) {
+    public ResponseEntity<Map<String, String>> getMessages(@PathVariable("locale") String locale) {
         Locale targetLocale = parseLocale(locale);
 
         try {

@@ -77,6 +77,7 @@ public class TenantEntity {
     private Instant updatedAt;
 
     @Version
+    @Column(name = "version", nullable = false)
     private int versionLock;
 
     @PrePersist

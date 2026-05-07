@@ -179,25 +179,25 @@ CREATE INDEX idx_skill_status ON skill_registry(status);
 CREATE TABLE IF NOT EXISTS audit_log (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id       UUID          NOT NULL,
+    user_id         UUID,
     action          VARCHAR(64)   NOT NULL,
-    resource_type   VARCHAR(64)   NOT NULL,
+    resource_type   VARCHAR(64),
     resource_id     VARCHAR(128),
-    actor_id        VARCHAR(64)   NOT NULL,
-    actor_type      VARCHAR(32)   NOT NULL DEFAULT 'user',
     details         JSONB,
-    ip_address      VARCHAR(45),
-    user_agent      VARCHAR(256),
     prev_hash       VARCHAR(64),
     entry_hash      VARCHAR(64)   NOT NULL,
+    trace_id        VARCHAR(64),
+    seq_num         BIGINT        NOT NULL,
     created_at      TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_audit_tenant FOREIGN KEY (tenant_id) REFERENCES tenant(id)
 );
 
 CREATE INDEX idx_audit_tenant ON audit_log(tenant_id);
+CREATE INDEX idx_audit_user ON audit_log(user_id);
 CREATE INDEX idx_audit_action ON audit_log(action);
 CREATE INDEX idx_audit_resource ON audit_log(resource_type, resource_id);
-CREATE INDEX idx_audit_created_at ON audit_log(created_at);
+CREATE INDEX idx_audit_created ON audit_log(created_at);
 CREATE INDEX idx_audit_entry_hash ON audit_log(entry_hash);
 
 -- ============================================================
@@ -273,9 +273,10 @@ CREATE TABLE IF NOT EXISTS sys_config (
     updated_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     version         INT           NOT NULL DEFAULT 0,
 
-    CONSTRAINT fk_config_tenant FOREIGN KEY (tenant_id) REFERENCES tenant(id),
-    CONSTRAINT uq_config_scope_key UNIQUE (scope, COALESCE(tenant_id, '00000000-0000-0000-0000-000000000000'::UUID), config_key)
+    CONSTRAINT fk_config_tenant FOREIGN KEY (tenant_id) REFERENCES tenant(id)
 );
 
 CREATE INDEX idx_config_tenant ON sys_config(tenant_id);
 CREATE INDEX idx_config_scope ON sys_config(scope);
+CREATE UNIQUE INDEX uq_config_scope_key
+    ON sys_config(scope, COALESCE(tenant_id, '00000000-0000-0000-0000-000000000000'::UUID), config_key);

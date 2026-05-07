@@ -6,8 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import java.sql.Array;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -19,6 +17,7 @@ public class TenantAwareVectorStore {
 
     private final JdbcTemplate jdbcTemplate;
     private final TenantContext tenantContext;
+    private volatile Boolean vectorEnabled;
 
     public TenantAwareVectorStore(JdbcTemplate jdbcTemplate, TenantContext tenantContext) {
         this.jdbcTemplate = jdbcTemplate;
@@ -38,6 +37,11 @@ public class TenantAwareVectorStore {
         UUID tenantId = tenantContext.getCurrentTenantId();
         if (tenantId == null) {
             throw new IllegalStateException("Tenant context required for vector search");
+        }
+
+        if (!isVectorEnabled()) {
+            log.debug("Skipping vector search because pgvector is unavailable");
+            return List.of();
         }
 
         String embeddingStr = "[" + doubleArrayToString(embedding) + "]";
@@ -66,8 +70,8 @@ public class TenantAwareVectorStore {
                 ps -> {
                     ps.setString(1, embeddingStr);
                     ps.setObject(2, tenantId);
-                    ps.setArray(3, toSqlArray(allowedScopes));
-                    ps.setArray(4, toSqlArray(visibilityPolicies));
+                    ps.setArray(3, ps.getConnection().createArrayOf("text", allowedScopes.toArray(new String[0])));
+                    ps.setArray(4, ps.getConnection().createArrayOf("text", visibilityPolicies.toArray(new String[0])));
                     ps.setString(5, embeddingStr);
                     ps.setDouble(6, similarityThreshold);
                     ps.setString(7, embeddingStr);
@@ -83,13 +87,16 @@ public class TenantAwareVectorStore {
         );
     }
 
-    private Array toSqlArray(Set<String> values) {
-        try {
-            return jdbcTemplate.getDataSource().getConnection()
-                    .createArrayOf("text", values.toArray(new String[0]));
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to create SQL array", e);
+    private boolean isVectorEnabled() {
+        Boolean cached = vectorEnabled;
+        if (cached != null) {
+            return cached;
         }
+
+        boolean enabled = Boolean.TRUE.equals(jdbcTemplate.queryForObject(
+                "SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector')", Boolean.class));
+        vectorEnabled = enabled;
+        return enabled;
     }
 
     private static String doubleArrayToString(double[] arr) {

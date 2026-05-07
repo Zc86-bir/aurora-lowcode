@@ -6,6 +6,8 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -26,6 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * Exposes Micrometer metrics for Prometheus/Grafana dashboards.
  */
+@Component
 public class SkillTelemetry {
 
     private static final Logger log = LoggerFactory.getLogger(SkillTelemetry.class);
@@ -94,6 +97,7 @@ public class SkillTelemetry {
             .register(registry);
     }
 
+    @Autowired
     public SkillTelemetry(MeterRegistry registry) {
         this(registry, 0.003, 0.015); // Default: Claude pricing
     }

@@ -12,6 +12,8 @@ mvn test -Dtest=JwtTokenProviderTest                       # single test
 mvn verify -DskipUTs -Djacoco.skip=true -DskipSpringdoc=true  # integration
 mvn spotbugs:check -DskipSpringdoc=true
 mvn spring-boot:run -Dspring.profiles.active=dev
+mvn --% spring-boot:start -Dspring-boot.run.profiles=dev -DskipSpringdoc=true -Dspring-boot.start.wait=180000
+mvn --% spring-boot:stop
 
 # Frontend (pnpm only)
 cd frontend && pnpm dev            # port 3000
@@ -132,3 +134,7 @@ No hand-written fetch/Axios — always use generated SDK.
 - `testcontainers-redis` module not available — use generic container if needed.
 - Mockito inline mocking is built-in (no `mockito-inline` dependency needed).
 - Web search via opencli: `aurora.search.enabled=true` (disabled by default). Registers `web_search` and `web_fetch` MCP tools.
+- PowerShell + Maven dotted args: use `--%` for goals like `spring-boot:start`/`stop` to avoid argument parsing issues.
+- Dev startup can exceed default plugin wait; use `-Dspring-boot.start.wait=180000` for `spring-boot:start`.
+- `ApiGatewayController` is `@Profile("!dev")`; dev profile uses lightweight API endpoints (e.g. `DevApiHealthController`) to avoid runtime bean chains.
+- I18N controller path variable must be explicit (`@PathVariable("locale")`) when parameter metadata is unavailable, otherwise request may fall through to `/error` and return 403.

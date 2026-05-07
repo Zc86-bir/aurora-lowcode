@@ -3,6 +3,7 @@ package com.aurora.core.adapter.websocket;
 import com.aurora.core.infrastructure.collaboration.DocumentRoomManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 
@@ -23,6 +24,7 @@ import java.util.UUID;
  *   <li>3: MessageSync (step 2)</li>
  * </ul>
  */
+@Component
 public class YjsWebSocketHandler extends BinaryWebSocketHandler {
 
     private static final Logger log = LoggerFactory.getLogger(YjsWebSocketHandler.class);

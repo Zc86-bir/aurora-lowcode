@@ -35,7 +35,7 @@ public class SkillRegistryEntity {
     @Column(nullable = false, length = 128)
     private String name;
 
-    @Column(nullable = false, length = 16)
+    @Column(name = "version", nullable = false, length = 16)
     private String skillVersion;
 
     @Column(columnDefinition = "text")
@@ -79,9 +79,6 @@ public class SkillRegistryEntity {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
-
-    @Version
-    private int versionLock;
 
     @PrePersist
     void prePersist() {
@@ -151,6 +148,4 @@ public class SkillRegistryEntity {
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 
-    public int getVersionLock() { return versionLock; }
-    public void setVersionLock(int versionLock) { this.versionLock = versionLock; }
 }

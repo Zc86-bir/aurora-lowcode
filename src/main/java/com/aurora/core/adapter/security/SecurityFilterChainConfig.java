@@ -2,6 +2,7 @@ package com.aurora.core.adapter.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -34,11 +35,14 @@ public class SecurityFilterChainConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
+    private final boolean devPermitApi;
 
     public SecurityFilterChainConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
-                                      ApiKeyAuthenticationFilter apiKeyAuthenticationFilter) {
+                                      ApiKeyAuthenticationFilter apiKeyAuthenticationFilter,
+                                      @Value("${aurora.security.dev-permit-api:false}") boolean devPermitApi) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.apiKeyAuthenticationFilter = apiKeyAuthenticationFilter;
+        this.devPermitApi = devPermitApi;
     }
 
     @Bean
@@ -61,6 +65,10 @@ public class SecurityFilterChainConfig {
                 .requestMatchers("/v3/api-docs/**").permitAll()
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/swagger-ui.html").permitAll()
+                // Dev-only bypass for API integration debugging
+                .requestMatchers("/api/v1/**").access((authentication, object) ->
+                        new org.springframework.security.authorization.AuthorizationDecision(
+                                devPermitApi || authentication.get().isAuthenticated()))
                 // External API — requires JWT or API key authentication
                 .requestMatchers("/api/v1/external/**").authenticated()
                 // All other requests require authentication

@@ -89,17 +89,18 @@ ON CONFLICT (scope, COALESCE(tenant_id, '00000000-0000-0000-0000-000000000000'::
 -- ============================================================
 -- 8. Genesis Audit Entry (hash chain anchor)
 -- ============================================================
-INSERT INTO audit_log (id, tenant_id, action, resource_type, resource_id, actor_id, actor_type, details, entry_hash, prev_hash)
+INSERT INTO audit_log (id, tenant_id, user_id, action, resource_type, resource_id, details, entry_hash, prev_hash, trace_id, seq_num)
 VALUES (
     '00000000-0000-0000-0000-000000000001',
     '00000000-0000-0000-0000-000000000001',
+    NULL,
     'SYSTEM_INIT',
     'platform',
     'genesis',
-    'system',
-    'system',
     '{"message": "Platform initialization - genesis audit entry"}'::jsonb,
     'e3b0c44298fc1c149268a07a0d63a3b2748f4e0e31e8e4b8c3f5d6a7b8c9d0e1',
-    NULL
+    NULL,
+    'genesis',
+    1
 )
 ON CONFLICT DO NOTHING;

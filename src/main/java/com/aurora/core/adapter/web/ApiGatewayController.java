@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
@@ -45,6 +46,7 @@ import java.util.*;
 @SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/v1")
+@Profile("!dev")
 public class ApiGatewayController {
 
     private final FormRuntimeEngine formEngine;
