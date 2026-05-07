@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 /**
  * AI Cost Firewall Auto-Configuration
@@ -22,6 +23,7 @@ import org.springframework.context.annotation.Configuration;
  *   aurora.ai-cost-firewall.enabled=false
  */
 @Configuration
+@Profile("!dev")
 @ConditionalOnProperty(prefix = "aurora.ai-cost-firewall", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class AiCostFirewallAutoConfiguration {
 
