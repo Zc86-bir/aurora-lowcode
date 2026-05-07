@@ -4,21 +4,21 @@
 
     <div class="status-bar">
       <span class="status-indicator" :class="healthStatus === 'UP' ? 'up' : 'down'" />
-      <span>{{ t('dashboard.systemStatus') }}: {{ healthStatus ?? '…' }}</span>
+      <span>{{ t('dashboard.systemStatus') }}: {{ healthStatus ?? 'OFFLINE (dev)' }}</span>
     </div>
 
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">{{ t('dashboard.cachedMetadata') }}</div>
-        <div class="stat-value">{{ stats?.cachedItems ?? '—' }}</div>
+        <div class="stat-value">{{ stats.cachedItems }}</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">{{ t('dashboard.totalReloads') }}</div>
-        <div class="stat-value">{{ stats?.totalReloads ?? '—' }}</div>
+        <div class="stat-value">{{ stats.totalReloads }}</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">{{ t('dashboard.reloadErrors') }}</div>
-        <div class="stat-value">{{ stats?.totalFailures ?? '—' }}</div>
+        <div class="stat-value">{{ stats.totalFailures }}</div>
       </div>
       <div class="stat-card highlight">
         <div class="stat-label">{{ t('dashboard.aiGeneration') }}</div>
@@ -28,34 +28,50 @@
       </div>
     </div>
 
-    <div v-if="isHealthError || isStatsError" class="error-banner">
+    <div v-if="backendError" class="error-banner">
       {{ t('common.couldNotReachBackend') }}
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useHealth, useMetadataStats } from '@/api/generated/services.gen'
-import type { HealthResponse, MetadataStats } from '@/api/generated/types.gen'
-import { computed } from 'vue'
+import { isDev } from '@/api/dev-data'
 
 const { t } = useI18n()
 
-const { data: healthData, isError: isHealthError } = useHealth()
-const { data: statsData, isError: isStatsError } = useMetadataStats()
+const healthStatus = ref<string | null>(null)
+const stats = ref({ cachedItems: 0, totalReloads: 0, totalFailures: 0, diffEntries: 0 })
+const backendError = ref(false)
 
-const healthStatus = computed(() =>
-  (healthData.value?.data as HealthResponse)?.status ?? null
-)
+const DEV_STATS = { cachedItems: 23, totalReloads: 8, totalFailures: 0, diffEntries: 5 }
 
-const stats = computed(() =>
-  statsData.value?.data as MetadataStats | undefined
-)
+onMounted(async () => {
+  try {
+    const health = await fetch('/api/v1/health').then(r => r.json())
+    healthStatus.value = health?.data?.status ?? 'DOWN'
+  } catch {
+    backendError.value = true
+  }
+
+  try {
+    const meta = await fetch('/api/v1/metadata/stats').then(r => r.json())
+    if (meta?.data) {
+      stats.value = meta.data
+    } else if (isDev()) {
+      stats.value = DEV_STATS
+    }
+  } catch {
+    if (isDev()) {
+      stats.value = DEV_STATS
+      backendError.value = true
+    }
+  }
+})
 
 function openCopilot() {
-  const event = new CustomEvent('open-copilot', { detail: { prompt: 'Generate a new application' } })
-  window.dispatchEvent(event)
+  window.dispatchEvent(new CustomEvent('copilot:open'))
 }
 </script>
 
