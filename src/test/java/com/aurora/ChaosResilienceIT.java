@@ -11,6 +11,7 @@ import com.aurora.core.contract.AuditLogger;
 import com.aurora.core.contract.CacheProvider;
 import com.aurora.core.contract.EventBus;
 import com.aurora.core.contract.PermissionChecker;
+import com.aurora.core.application.supervisor.SupervisorOrchestrator;
 import com.aurora.core.adapter.websocket.YjsWebSocketHandler;
 import com.aurora.core.generator.CodeGenerator;
 import com.aurora.core.infrastructure.ai.LlmGatewayService;
@@ -84,6 +85,9 @@ class ChaosResilienceIT {
 
     @MockBean
     private YjsWebSocketHandler yjsWebSocketHandler;
+
+    @MockBean
+    private SupervisorOrchestrator supervisorOrchestrator;
 
     /**
      * Verify that the CircuitBreaker transitions to OPEN when

@@ -55,7 +55,7 @@ public class MetadataEntity {
     @Column(name = "parent_id", columnDefinition = "uuid")
     private UUID parentId;
 
-    @Column(columnDefinition = "text[]")
+    @JdbcTypeCode(SqlTypes.ARRAY)
     private String[] tags;
 
     @Column(name = "created_by", nullable = false, length = 64)

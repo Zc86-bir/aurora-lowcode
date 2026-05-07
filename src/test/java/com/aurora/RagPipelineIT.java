@@ -5,6 +5,7 @@ import com.aurora.core.contract.AuditLogger;
 import com.aurora.core.contract.CacheProvider;
 import com.aurora.core.contract.EventBus;
 import com.aurora.core.contract.PermissionChecker;
+import com.aurora.core.application.supervisor.SupervisorOrchestrator;
 import com.aurora.core.adapter.websocket.YjsWebSocketHandler;
 import com.aurora.core.generator.CodeGenerator;
 import com.aurora.core.infrastructure.ai.LlmGatewayService;
@@ -79,6 +80,9 @@ class RagPipelineIT {
 
     @MockBean
     private YjsWebSocketHandler yjsWebSocketHandler;
+
+    @MockBean
+    private SupervisorOrchestrator supervisorOrchestrator;
 
     @MockBean
     private TenantAwareVectorStore tenantAwareVectorStore;
