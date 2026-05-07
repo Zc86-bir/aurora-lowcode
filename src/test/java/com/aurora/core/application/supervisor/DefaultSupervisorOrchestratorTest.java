@@ -404,6 +404,7 @@ class DefaultSupervisorOrchestratorTest {
     void shouldFailFastWithoutWaitingForBlockedSiblingInSameBatch() throws Exception {
         SkillExecutor skillExecutor = mock(SkillExecutor.class);
         MetadataHotReloadManager reloadManager = mock(MetadataHotReloadManager.class);
+        CountDownLatch releaseT1 = new CountDownLatch(1);
         CountDownLatch slowTaskStarted = new CountDownLatch(1);
         CountDownLatch slowTaskInterrupted = new CountDownLatch(1);
         AtomicBoolean slowTaskFinished = new AtomicBoolean(false);
@@ -413,6 +414,12 @@ class DefaultSupervisorOrchestratorTest {
             SkillExecutor.SkillRequest request = invocation.getArgument(0);
             String taskId = request.context().metadata().get("supervisorTaskId");
             if ("T1".equals(taskId)) {
+                try {
+                    releaseT1.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(e);
+                }
                 return new SkillExecutor.SkillResult.Failure(
                     request.skillId(),
                     request.context().requestId(),
@@ -424,6 +431,7 @@ class DefaultSupervisorOrchestratorTest {
                 );
             }
             slowTaskStarted.countDown();
+            releaseT1.countDown();
             try {
                 new CountDownLatch(1).await();
             } catch (InterruptedException e) {
@@ -490,6 +498,7 @@ class DefaultSupervisorOrchestratorTest {
     void shouldNotCaptureRollbackForSiblingThatOnlyFinishesAfterFailure() throws Exception {
         SkillExecutor skillExecutor = mock(SkillExecutor.class);
         MetadataHotReloadManager reloadManager = mock(MetadataHotReloadManager.class);
+        CountDownLatch releaseT1 = new CountDownLatch(1);
         CountDownLatch slowTaskStarted = new CountDownLatch(1);
         AtomicBoolean slowTaskCompleted = new AtomicBoolean(false);
         AtomicReference<SupervisorResult> resultRef = new AtomicReference<>();
@@ -498,6 +507,12 @@ class DefaultSupervisorOrchestratorTest {
             SkillExecutor.SkillRequest request = invocation.getArgument(0);
             String taskId = request.context().metadata().get("supervisorTaskId");
             if ("T1".equals(taskId)) {
+                try {
+                    releaseT1.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(e);
+                }
                 return new SkillExecutor.SkillResult.Failure(
                     request.skillId(),
                     request.context().requestId(),
@@ -509,6 +524,7 @@ class DefaultSupervisorOrchestratorTest {
                 );
             }
             slowTaskStarted.countDown();
+            releaseT1.countDown();
             try {
                 new CountDownLatch(1).await();
             } catch (InterruptedException e) {
