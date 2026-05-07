@@ -1,5 +1,7 @@
 package com.aurora.core.adapter.web;
 
+import com.aurora.core.application.supervisor.SupervisorOrchestrator;
+import com.aurora.core.application.supervisor.SupervisorRequest;
 import com.aurora.core.contract.PermissionChecker;
 import com.aurora.core.contract.TenantContext;
 import com.aurora.core.contract.AuditLogger;
@@ -54,6 +56,7 @@ public class ApiGatewayController {
     private final TenantContext tenantContext;
     private final CacheProvider cacheProvider;
     private final AuditLogger auditLogger;
+    private final SupervisorOrchestrator supervisorOrchestrator;
 
     public ApiGatewayController(
         FormRuntimeEngine formEngine,
@@ -64,7 +67,8 @@ public class ApiGatewayController {
         PermissionChecker permissionChecker,
         TenantContext tenantContext,
         CacheProvider cacheProvider,
-        AuditLogger auditLogger
+        AuditLogger auditLogger,
+        SupervisorOrchestrator supervisorOrchestrator
     ) {
         this.formEngine = formEngine;
         this.reportEngine = reportEngine;
@@ -75,6 +79,7 @@ public class ApiGatewayController {
         this.tenantContext = tenantContext;
         this.cacheProvider = cacheProvider;
         this.auditLogger = auditLogger;
+        this.supervisorOrchestrator = supervisorOrchestrator;
     }
 
     // ==================== Form APIs ====================
@@ -332,6 +337,35 @@ public class ApiGatewayController {
             "commitHash", result.commitHash(),
             "duration", result.duration().toMillis()
         )));
+    }
+
+    // ==================== Supervisor APIs ====================
+
+    @Operation(summary = "Generate composite application", description = "Uses supervisor orchestration to generate a multi-skill app plan")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Composite app generation started/completed"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request or DAG"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Permission denied")
+    })
+    @PostMapping("/generate/app")
+    public ResponseEntity<?> generateCompositeApp(
+        @RequestHeader("X-Tenant-Id") UUID tenantId,
+        @RequestHeader("X-User-Id") UUID userId,
+        @RequestBody Map<String, Object> body
+    ) {
+        String prompt = Objects.toString(body.get("prompt"), "").trim();
+        if (prompt.isEmpty()) {
+            return ResponseEntity.badRequest().body(error("PROMPT_REQUIRED"));
+        }
+
+        var result = supervisorOrchestrator.execute(new SupervisorRequest(
+                tenantId,
+                userId,
+                prompt,
+                UUID.randomUUID().toString()
+        ));
+
+        return ResponseEntity.ok(ApiResponse.success(result));
     }
 
     // ==================== Health Check ====================
