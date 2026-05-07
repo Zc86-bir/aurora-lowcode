@@ -38,10 +38,6 @@
         </div>
       </div>
     </div>
-
-    <div v-if="backendError" class="card notice-bar">
-      ⚡ {{ t('common.couldNotReachBackend') }}
-    </div>
   </div>
 </template>
 
@@ -54,7 +50,6 @@ const { t } = useI18n()
 
 const healthStatus = ref<string | null>(null)
 const stats = ref({ cachedItems: 0, totalReloads: 0, totalFailures: 0, diffEntries: 0 })
-const backendError = ref(false)
 
 const DEV_STATS = { cachedItems: 23, totalReloads: 8, totalFailures: 0, diffEntries: 5 }
 
@@ -62,14 +57,12 @@ onMounted(async () => {
   try {
     const health = await fetch('/api/v1/health').then(r => r.json())
     healthStatus.value = health?.data?.status ?? 'DOWN'
-  } catch {
-    backendError.value = true
-  }
+  } catch { /* offline */ }
   try {
     const meta = await fetch('/api/v1/metadata/stats').then(r => r.json())
     stats.value = meta?.data || (isDev() ? DEV_STATS : stats.value)
   } catch {
-    if (isDev()) { stats.value = DEV_STATS; backendError.value = true }
+    if (isDev()) { stats.value = DEV_STATS }
   }
 })
 
@@ -97,6 +90,4 @@ function openCopilot() {
 
 .stat-label { font-size: var(--text-xs); color: var(--color-text-secondary); margin-bottom: 2px; }
 .stat-value { font-size: var(--text-2xl); font-weight: 700; color: var(--color-text); }
-
-.notice-bar { margin-top: var(--space-lg); padding: var(--space-md) var(--space-lg); background: var(--color-warning-light); border: 1px solid #fde68a; color: #92400e; font-size: var(--text-sm); }
 </style>
