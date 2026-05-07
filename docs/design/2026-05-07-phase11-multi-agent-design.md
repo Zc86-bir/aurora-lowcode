@@ -97,6 +97,13 @@ Required schema rules:
 - No task may depend on itself.
 - Cycles are rejected before execution.
 
+Validator hard guards:
+
+- During DAG validation, every dependency edge must be checked against the task registry first.
+- If a dependency points to a missing task, validation must fail immediately with an `IllegalArgumentException`, for example:
+  `if (!taskMap.containsKey(dep)) { throw new IllegalArgumentException(...); }`
+- This is required to prevent invalid dependency references from degrading into scheduler stalls or retry loops.
+
 Topological sorting must use `dependencies` from this schema only. No heuristic ordering is allowed.
 
 ### 3.2 Orchestration Data Model
@@ -131,6 +138,12 @@ Execution flow:
    - join and collect all results,
    - if any fail, stop DAG progression and trigger rollback,
    - otherwise reduce in-degrees and form the next batch.
+
+Cycle/skip protection rules:
+
+- The scheduler must track a `processedCount` (or equivalent) for successfully dequeued / scheduled nodes.
+- After topological scheduling completes, if `processedCount != totalTaskCount`, the graph must be treated as invalid and execution must fail fast.
+- This guards against cases where a cycle leaves the ready queue empty and the scheduler would otherwise keep skipping batches or waiting forever.
 
 This design intentionally avoids nested scopes waiting on sibling futures.
 
