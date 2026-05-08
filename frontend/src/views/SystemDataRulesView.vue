@@ -2,39 +2,33 @@
   <div class="page">
     <div class="page-header">
       <h2>Data Permission Rules</h2>
-      <button class="btn btn-primary" @click="openCreate">+ Add Rule</button>
     </div>
 
     <div v-if="loading" class="loading-state">Loading...</div>
     <div v-else-if="error" class="error-state">{{ error }}</div>
-    <div v-else-if="rules.length === 0" class="empty-state">No data rules found.</div>
-    <div v-else class="card table-card">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Rule Name</th>
-            <th>Resource Type</th>
-            <th>Expression</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="r in rules" :key="r.id">
-            <td><strong>{{ r.ruleName }}</strong></td>
-            <td><span class="badge badge-info">{{ r.resourceType }}</span></td>
-            <td class="mono expression">{{ formatExpression(r.ruleExpression) }}</td>
-            <td>
-              <span class="badge" :class="r.status === 'ACTIVE' ? 'badge-success' : 'badge-error'">{{ r.status }}</span>
-            </td>
-            <td class="actions">
-              <button class="text-btn" @click="openEdit(r)">Edit</button>
-              <button class="text-btn danger" @click="deleteRule(r)">Delete</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <SystemEntityTable
+      v-else
+      title="Data Permission Rules"
+      :columns="['Rule Name', 'Resource Type', 'Expression', 'Status', 'Actions']"
+      :rows="rules"
+    >
+      <template #actions>
+        <button class="btn btn-primary" @click="openCreate">+ Add Rule</button>
+      </template>
+
+      <tr v-for="r in rules" :key="r.id">
+        <td><strong>{{ r.ruleName }}</strong></td>
+        <td><span class="badge badge-info">{{ r.resourceType }}</span></td>
+        <td class="mono expression">{{ formatExpression(r.ruleExpression) }}</td>
+        <td>
+          <span class="badge" :class="r.status === 'ACTIVE' ? 'badge-success' : 'badge-error'">{{ r.status }}</span>
+        </td>
+        <td class="actions">
+          <button class="text-btn" @click="openEdit(r)">Edit</button>
+          <button class="text-btn danger" @click="deleteRule(r)">Delete</button>
+        </td>
+      </tr>
+    </SystemEntityTable>
 
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal-content">
@@ -75,6 +69,7 @@
 import { ref, onMounted } from 'vue'
 import type { SysDataRule } from '@/api/admin-contract'
 import * as api from '@/api/admin-contract'
+import SystemEntityTable from '@/components/system/SystemEntityTable.vue'
 
 const rules = ref<SysDataRule[]>([])
 const loading = ref(true)
@@ -161,12 +156,6 @@ onMounted(loadData)
 </script>
 
 <style scoped>
-.table-card { padding: 0; overflow: hidden; }
-.data-table { width: 100%; border-collapse: collapse; }
-.data-table th { text-align: left; padding: 0.75rem var(--space-lg); font-size: var(--text-xs); font-weight: 600; color: var(--color-text-secondary); background: #f8fafc; border-bottom: 1px solid var(--color-border); }
-.data-table td { padding: 0.75rem var(--space-lg); font-size: var(--text-sm); border-bottom: 1px solid var(--color-border); }
-.data-table tr:last-child td { border-bottom: none; }
-.data-table tr:hover td { background: #f8fafc; }
 .mono { font-family: var(--font-mono); font-size: var(--text-xs); }
 .expression { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .actions { display: flex; gap: var(--space-md); }

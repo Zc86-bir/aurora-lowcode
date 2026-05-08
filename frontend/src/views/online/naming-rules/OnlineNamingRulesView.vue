@@ -1,0 +1,49 @@
+<template>
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <h2>{{ t('online.onlineNamingRules') }}</h2>
+        <p class="page-description">{{ t('online.onlineNamingRulesDescription') }}</p>
+      </div>
+    </div>
+
+    <OnlineModuleCardGrid :items="items" />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+import OnlineModuleCardGrid from '@/components/online/OnlineModuleCardGrid.vue'
+
+const { t } = useI18n()
+
+const items = [
+  {
+    title: t('online.onlineNamingRulesCardFormsTitle'),
+    description: t('online.onlineNamingRulesCardFormsDescription'),
+    to: '/online/forms',
+  },
+  {
+    title: t('online.onlineNamingRulesCardValidationTitle'),
+    description: t('online.onlineNamingRulesCardValidationDescription'),
+    to: '/online/validation-rules',
+  },
+  {
+    title: t('online.onlineNamingRulesCardReportsTitle'),
+    description: t('online.onlineNamingRulesCardReportsDescription'),
+    to: '/online/reports',
+  },
+  {
+    title: t('online.onlineNamingRulesCardCodegenTitle'),
+    description: t('online.onlineNamingRulesCardCodegenDescription'),
+    to: '/online/codegen',
+  },
+]
+</script>
+
+<style scoped>
+.page-description {
+  margin: 0.5rem 0 0;
+  color: var(--color-text-secondary);
+}
+</style>

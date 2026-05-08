@@ -235,43 +235,116 @@ aurora-lowcode/
 
 ## 🚀 快速开始
 
-### 方式一：DevContainer（推荐）
+### 前置要求
+
+| 组件 | 最低版本 | 推荐版本 | 说明 |
+|------|----------|----------|------|
+| JDK | 25 LTS | 25.0.2 | 虚拟线程 + StructuredTaskScope |
+| Maven | 3.9+ | 3.9.9 | 项目管理 |
+| Docker | 24+ | 27+ | 容器运行时（PostgreSQL + Redis） |
+| Node.js | 18+ | 20 LTS | 前端开发 |
+| pnpm | 9+ | 9.12 | 前端包管理（项目强制使用 pnpm） |
+
+### 方式一：DevContainer（推荐，零配置）
 
 ```bash
 git clone <repo-url>
 code .                    # VS Code 自动打开 DevContainer
-# 等待容器启动后：
-cd AURORA-LOWCODE && mvn spring-boot:run   # 后端
-cd frontend && pnpm dev                     # 前端
+# 容器自动安装 JDK 25 + Node 20 + pnpm 9 + Docker-in-Docker
+# 自动启动 PostgreSQL + Redis，预装 Maven 依赖
+```
+
+启动后在容器终端中：
+
+```bash
+# 后端（端口 8080）
+mvn spring-boot:run -Dspring.profiles.active=dev
+
+# 前端（端口 3000，新终端）
+cd frontend && pnpm dev
 ```
 
 ### 方式二：本地环境
 
 ```bash
-# 前置要求：JDK 25 + Node 20 + pnpm 9 + Docker
-docker compose -f docker-compose.dev.yml up -d   # 启动 PostgreSQL + Redis
-mvn spring-boot:run                               # 后端 (localhost:8080)
-cd frontend && pnpm dev                           # 前端 (localhost:3000)
+# 1. 启动基础设施（PostgreSQL + Redis）
+make dev
+# 等价于: docker compose -f docker-compose.dev.yml up -d
+
+# 2. 启动后端（端口 8080）
+export JAVA_HOME=/path/to/jdk-25
+mvn spring-boot:run -Dspring.profiles.active=dev
+
+# 3. 启动前端（端口 3000，新终端）
+cd frontend && pnpm install && pnpm dev
+```
+
+### 方式三：Makefile 快捷命令
+
+```bash
+make help              # 查看所有可用命令
+make dev               # 启动 PostgreSQL + Redis
+make dev-down          # 停止基础设施
+make test              # 运行所有测试（单元 + 集成）
+make test-unit         # 仅单元测试
+make test-coverage     # 测试 + JaCoCo 覆盖率报告
+make build             # 构建 JAR
+make docker-up         # 生产模式一键启动（Aurora + PG + Redis + MinIO）
+make docker-down       # 停止生产环境
+make verify            # 完整验证（测试 + 安全扫描 + SpotBugs）
+make clean             # 清理构建产物
+```
+
+### 方式四：Docker Compose 生产模式
+
+```bash
+# 设置必要的环境变量
+export DATABASE_PASSWORD=your_secure_db_password
+export REDIS_PASSWORD=your_secure_redis_password
+export JWT_SECRET=your_jwt_secret_min_32_chars
+export OSS_ACCESS_KEY_ID=your_oss_access_key_id
+export OSS_ACCESS_KEY_SECRET=your_oss_access_key_secret
+
+# 一键启动
+make docker-up
+# 等价于: docker compose -f docker-compose.prod.yml up -d
+```
+
+### 验证启动
+
+```bash
+# 健康检查
+curl -s http://localhost:8080/actuator/health
+# 应返回: {"status":"UP"}
+
+# API 文档
+open http://localhost:8080/swagger-ui.html
+
+# 前端
+open http://localhost:3000
 ```
 
 ### 环境变量
 
-| 变量 | 默认值 | 说明 |
-|------|--------|------|
-| `DATABASE_HOST` | localhost | PostgreSQL 地址 |
-| `DATABASE_PORT` | 5432 | PostgreSQL 端口 |
-| `DATABASE_NAME` | aurora | 数据库名 |
-| `DATABASE_USER` | aurora | 用户名 |
-| `DATABASE_PASSWORD` | aurora_dev_password | 密码 |
-| `REDIS_HOST` | localhost | Redis 地址 |
-| `REDIS_PORT` | 6379 | Redis 端口 |
-| `JWT_SECRET` | (必填,≥32字节) | JWT 签名密钥 |
-| `OSS_ACCESS_KEY_ID` | (必填) | 阿里云 OSS 密钥 |
-| `OSS_ACCESS_KEY_SECRET` | (必填) | 阿里云 OSS 密钥 |
-| `ANTHROPIC_API_KEY` | — | Anthropic Claude API |
-| `OPENAI_API_KEY` | — | OpenAI GPT-4o API |
-| `NVD_API_KEY` | — | OWASP NVD 漏洞库 |
-| `SPRING_PROFILES_ACTIVE` | dev | 运行环境 (dev/test/prod) |
+| 变量 | 默认值 | 必填(生产) | 说明 |
+|------|--------|:----------:|------|
+| `DATABASE_HOST` | localhost | 是 | PostgreSQL 地址 |
+| `DATABASE_PORT` | 5432 | 否 | PostgreSQL 端口 |
+| `DATABASE_NAME` | aurora | 否 | 数据库名 |
+| `DATABASE_USER` | aurora | 否 | 用户名 |
+| `DATABASE_PASSWORD` | aurora_dev_password | **是** | 数据库密码 |
+| `REDIS_HOST` | localhost | 是 | Redis 地址 |
+| `REDIS_PORT` | 6379 | 否 | Redis 端口 |
+| `REDIS_PASSWORD` | — | **是** | Redis 密码 |
+| `JWT_SECRET` | — | **是** | JWT 签名密钥（≥32 字符） |
+| `OSS_ACCESS_KEY_ID` | — | **是** | 阿里云 OSS 密钥 |
+| `OSS_ACCESS_KEY_SECRET` | — | **是** | 阿里云 OSS 密钥 |
+| `ANTHROPIC_API_KEY` | — | 否 | Anthropic Claude API |
+| `OPENAI_API_KEY` | — | 否 | OpenAI GPT-4o API |
+| `NVD_API_KEY` | — | 否 | OWASP NVD 漏洞库 |
+| `SPRING_PROFILES_ACTIVE` | dev | 否 | 运行环境 (dev/test/prod) |
+| `SERVER_PORT` | 8080 | 否 | HTTP 端口 |
+| `CORS_ORIGINS` | http://localhost:3000 | 否 | CORS 白名单 |
 
 ---
 

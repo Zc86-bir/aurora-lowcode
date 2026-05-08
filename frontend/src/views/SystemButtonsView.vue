@@ -2,39 +2,33 @@
   <div class="page">
     <div class="page-header">
       <h2>Button Permissions</h2>
-      <button class="btn btn-primary" @click="openCreate">+ Add Button</button>
     </div>
 
     <div v-if="loading" class="loading-state">Loading...</div>
     <div v-else-if="error" class="error-state">{{ error }}</div>
-    <div v-else-if="buttons.length === 0" class="empty-state">No button permissions found.</div>
-    <div v-else class="card table-card">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Button Code</th>
-            <th>Button Name</th>
-            <th>Permission Key</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="b in buttons" :key="b.id">
-            <td class="mono">{{ b.buttonCode }}</td>
-            <td>{{ b.buttonName }}</td>
-            <td class="mono">{{ b.permissionKey || '—' }}</td>
-            <td>
-              <span class="badge" :class="b.status === 'ACTIVE' ? 'badge-success' : 'badge-error'">{{ b.status }}</span>
-            </td>
-            <td class="actions">
-              <button class="text-btn" @click="openEdit(b)">Edit</button>
-              <button class="text-btn danger" @click="deleteButton(b)">Delete</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <SystemEntityTable
+      v-else
+      title="Button Permissions"
+      :columns="['Button Code', 'Button Name', 'Permission Key', 'Status', 'Actions']"
+      :rows="buttons"
+    >
+      <template #actions>
+        <button class="btn btn-primary" @click="openCreate">+ Add Button</button>
+      </template>
+
+      <tr v-for="b in buttons" :key="b.id">
+        <td class="mono">{{ b.buttonCode }}</td>
+        <td>{{ b.buttonName }}</td>
+        <td class="mono">{{ b.permissionKey || '—' }}</td>
+        <td>
+          <span class="badge" :class="b.status === 'ACTIVE' ? 'badge-success' : 'badge-error'">{{ b.status }}</span>
+        </td>
+        <td class="actions">
+          <button class="text-btn" @click="openEdit(b)">Edit</button>
+          <button class="text-btn danger" @click="deleteButton(b)">Delete</button>
+        </td>
+      </tr>
+    </SystemEntityTable>
 
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal-content">
@@ -75,6 +69,7 @@
 import { ref, onMounted } from 'vue'
 import type { SysButton } from '@/api/admin-contract'
 import * as api from '@/api/admin-contract'
+import SystemEntityTable from '@/components/system/SystemEntityTable.vue'
 
 const buttons = ref<SysButton[]>([])
 const loading = ref(true)
@@ -143,12 +138,6 @@ onMounted(loadData)
 </script>
 
 <style scoped>
-.table-card { padding: 0; overflow: hidden; }
-.data-table { width: 100%; border-collapse: collapse; }
-.data-table th { text-align: left; padding: 0.75rem var(--space-lg); font-size: var(--text-xs); font-weight: 600; color: var(--color-text-secondary); background: #f8fafc; border-bottom: 1px solid var(--color-border); }
-.data-table td { padding: 0.75rem var(--space-lg); font-size: var(--text-sm); border-bottom: 1px solid var(--color-border); }
-.data-table tr:last-child td { border-bottom: none; }
-.data-table tr:hover td { background: #f8fafc; }
 .mono { font-family: var(--font-mono); font-size: var(--text-xs); }
 .actions { display: flex; gap: var(--space-md); }
 .text-btn.danger { color: var(--color-error); }

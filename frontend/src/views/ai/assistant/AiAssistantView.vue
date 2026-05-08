@@ -2,16 +2,28 @@
   <div class="page">
     <div class="page-header">
       <div>
-        <h2>AI Assistant</h2>
-        <p class="page-description">Use a formal AI domain entry point for assistant-driven work while keeping the global copilot available everywhere in the console.</p>
+        <h2>{{ content.title }}</h2>
+        <p class="page-description">{{ content.description }}</p>
       </div>
     </div>
+
+    <AiCapabilityPanel :title="content.primaryCardTitle" :body="content.primaryCardBody" :support-copy="content.supportCopy" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { getAiEntryPageContent } from '@/api/ai-platform-contract'
+import AiCapabilityPanel from '@/components/ai/AiCapabilityPanel.vue'
+
+const { t } = useI18n()
+const content = computed(() => getAiEntryPageContent(t, 'assistant'))
 </script>
 
 <style scoped>
-.page-description { color: var(--color-text-secondary); line-height: 1.6; }
+.page-description {
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
 </style>

@@ -255,3 +255,138 @@ export async function updateDataRule(id: string, data: {
 export async function deleteDataRule(id: string): Promise<{ deleted: boolean }> {
   return request(`/data-rules/${id}`, { method: 'DELETE' })
 }
+
+// ─── Form Permissions ───
+
+export interface SysFormPermission {
+  id: string
+  formId: string
+  roleId: string
+  permissionLevel: string
+  status: string
+  createdAt: string
+  updatedAt: string
+}
+
+export async function listFormPermissions(): Promise<SysFormPermission[]> {
+  return request<SysFormPermission[]>('/form-permissions')
+}
+
+// ─── Departments ───
+
+export interface SysDepartment {
+  id: string
+  departmentCode: string
+  departmentName: string
+  parentId: string | null
+  leaderUserId: string | null
+  sortOrder: number
+  status: string
+  createdAt: string
+  updatedAt: string
+}
+
+export async function listDepartments(): Promise<SysDepartment[]> {
+  return request<SysDepartment[]>('/departments')
+}
+
+// ─── Dictionary Items ───
+
+export interface SysDictionaryItem {
+  id: string
+  categoryCode: string
+  itemLabel: string
+  itemValue: string
+  sortOrder: number
+  status: string
+  createdAt: string
+  updatedAt: string
+}
+
+export async function listDictionaryItems(): Promise<SysDictionaryItem[]> {
+  return request<SysDictionaryItem[]>('/dictionary-items')
+}
+
+// ─── Notices ───
+
+export interface SysNotice {
+  id: string
+  title: string
+  content: string
+  noticeType: string
+  publishStatus: string
+  publishedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export async function listNotices(): Promise<SysNotice[]> {
+  return request<SysNotice[]>('/notices')
+}
+
+// ─── Positions ───
+
+export interface SysPosition {
+  id: string
+  positionCode: string
+  positionName: string
+  sortOrder: number
+  status: string
+  createdAt: string
+  updatedAt: string
+}
+
+export async function listPositions(): Promise<SysPosition[]> {
+  return request<SysPosition[]>('/positions')
+}
+
+// ─── Contacts ───
+
+export interface SysContact {
+  id: string
+  displayName: string
+  email: string
+  phone: string
+  departmentId: string | null
+  status: string
+  createdAt: string
+  updatedAt: string
+}
+
+export async function listContacts(): Promise<SysContact[]> {
+  return request<SysContact[]>('/contacts')
+}
+
+// ─── Data Sources ───
+
+export interface SysDataSource {
+  id: string
+  sourceCode: string
+  sourceName: string
+  databaseType: string
+  status: string
+  createdAt: string
+  updatedAt: string
+}
+
+export async function listDataSources(): Promise<SysDataSource[]> {
+  return request<SysDataSource[]>('/data-sources')
+}
+
+// ─── Tenants ───
+
+export interface SysTenant {
+  id: string
+  tenantCode: string
+  tenantName: string
+  contactName: string
+  contactEmail: string
+  status: string
+  expiresAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export async function listTenants(): Promise<SysTenant[]> {
+  return request<SysTenant[]>('/tenants')
+}

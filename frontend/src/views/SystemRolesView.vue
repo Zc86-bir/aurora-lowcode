@@ -7,21 +7,26 @@
 
     <div v-if="loading" class="loading-state">Loading...</div>
     <div v-else-if="error" class="error-state">{{ error }}</div>
-    <div v-else-if="roles.length === 0" class="empty-state">No roles found.</div>
-    <div v-else class="role-grid">
-      <div v-for="r in roles" :key="r.id" class="card role-card">
-        <div class="role-header">
-          <div>
-            <h3>{{ r.roleName }}</h3>
-            <span class="role-code">{{ r.roleCode }}</span>
+    <div v-else class="roles-section">
+      <div class="section-header">
+        <h3>Roles</h3>
+      </div>
+      <div v-if="roles.length === 0" class="empty-state">No roles found.</div>
+      <div v-else class="role-grid">
+        <div v-for="r in roles" :key="r.id" class="card role-card">
+          <div class="role-header">
+            <div>
+              <h3>{{ r.roleName }}</h3>
+              <span class="role-code">{{ r.roleCode }}</span>
+            </div>
+            <span class="badge" :class="r.status === 'ACTIVE' ? 'badge-success' : 'badge-error'">{{ r.status }}</span>
           </div>
-          <span class="badge" :class="r.status === 'ACTIVE' ? 'badge-success' : 'badge-error'">{{ r.status }}</span>
-        </div>
-        <p class="role-desc">{{ r.description || 'No description' }}</p>
-        <div class="role-footer">
-          <button class="text-btn" @click="openEdit(r)">Edit</button>
-          <button class="text-btn" @click="openMenuAssign(r)">Assign Menus</button>
-          <button class="text-btn danger" @click="deleteRole(r)">Delete</button>
+          <p class="role-desc">{{ r.description || 'No description' }}</p>
+          <div class="role-footer">
+            <button class="text-btn" @click="openEdit(r)">Edit</button>
+            <button class="text-btn" @click="openMenuAssign(r)">Assign Menus</button>
+            <button class="text-btn danger" @click="deleteRole(r)">Delete</button>
+          </div>
         </div>
       </div>
     </div>
@@ -190,6 +195,20 @@ onMounted(loadData)
 </script>
 
 <style scoped>
+.roles-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.section-header h3 {
+  margin: 0;
+  font-size: var(--text-base);
+}
 .role-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--space-md); }
 .role-card { display: flex; flex-direction: column; }
 .role-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-sm); }

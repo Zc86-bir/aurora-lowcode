@@ -2,44 +2,37 @@
   <div class="page">
     <div class="page-header">
       <h2>User Management</h2>
-      <button class="btn btn-primary" @click="openCreate">+ Add User</button>
     </div>
 
     <div v-if="loading" class="loading-state">Loading...</div>
     <div v-else-if="error" class="error-state">{{ error }}</div>
-    <div v-else-if="users.length === 0" class="empty-state">No users found.</div>
-    <div v-else class="card table-card">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Roles</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="u in users" :key="u.id">
-            <td><strong>{{ u.username }}</strong></td>
-            <td>{{ u.email || '—' }}</td>
-            <td>{{ u.phone || '—' }}</td>
-            <td>
-              <span v-for="r in u.roles" :key="r" class="badge badge-info">{{ r }}</span>
-              <span v-if="!u.roles.length" class="text-muted">None</span>
-            </td>
-            <td>
-              <span class="badge" :class="u.status === 'ACTIVE' ? 'badge-success' : 'badge-error'">{{ u.status }}</span>
-            </td>
-            <td class="actions">
-              <button class="text-btn" @click="openEdit(u)">Edit</button>
-              <button class="text-btn" @click="deleteUser(u)">Delete</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <SystemEntityTable
+      v-else
+      title="Users"
+      :columns="['Username', 'Email', 'Phone', 'Roles', 'Status', 'Actions']"
+      :rows="users"
+    >
+      <template #actions>
+        <button class="btn btn-primary" @click="openCreate">+ Add User</button>
+      </template>
+
+      <tr v-for="u in users" :key="u.id">
+        <td><strong>{{ u.username }}</strong></td>
+        <td>{{ u.email || '—' }}</td>
+        <td>{{ u.phone || '—' }}</td>
+        <td>
+          <span v-for="r in u.roles" :key="r" class="badge badge-info">{{ r }}</span>
+          <span v-if="!u.roles.length" class="text-muted">None</span>
+        </td>
+        <td>
+          <span class="badge" :class="u.status === 'ACTIVE' ? 'badge-success' : 'badge-error'">{{ u.status }}</span>
+        </td>
+        <td class="actions">
+          <button class="text-btn" @click="openEdit(u)">Edit</button>
+          <button class="text-btn" @click="deleteUser(u)">Delete</button>
+        </td>
+      </tr>
+    </SystemEntityTable>
 
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal-content">
@@ -81,6 +74,7 @@
 import { ref, onMounted } from 'vue'
 import type { SysUser } from '@/api/admin-contract'
 import * as api from '@/api/admin-contract'
+import SystemEntityTable from '@/components/system/SystemEntityTable.vue'
 
 const users = ref<SysUser[]>([])
 const loading = ref(true)
@@ -157,13 +151,8 @@ onMounted(loadData)
 </script>
 
 <style scoped>
-.table-card { padding: 0; overflow: hidden; }
-.data-table { width: 100%; border-collapse: collapse; }
-.data-table th { text-align: left; padding: 0.75rem var(--space-lg); font-size: var(--text-xs); font-weight: 600; color: var(--color-text-secondary); background: #f8fafc; border-bottom: 1px solid var(--color-border); }
-.data-table td { padding: 0.75rem var(--space-lg); font-size: var(--text-sm); border-bottom: 1px solid var(--color-border); }
-.data-table tr:last-child td { border-bottom: none; }
-.data-table tr:hover td { background: #f8fafc; }
 .actions { display: flex; gap: var(--space-md); }
 .text-muted { color: var(--color-text-muted); font-size: var(--text-xs); }
 .form-actions { display: flex; gap: var(--space-sm); justify-content: flex-end; margin-top: var(--space-lg); }
+.debug-mount-marker { position: absolute; left: -9999px; top: -9999px; }
 </style>

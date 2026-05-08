@@ -11,9 +11,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!token.value)
 
-  function setToken(newToken: string) {
-    token.value = newToken
-    localStorage.setItem('auth_token', newToken)
+  function applyToken(newToken: string) {
     try {
       const payload = JSON.parse(atob(newToken.split('.')[1]))
       // Check JWT expiry
@@ -27,6 +25,12 @@ export const useAuthStore = defineStore('auth', () => {
     } catch {
       // Invalid JWT format
     }
+  }
+
+  function setToken(newToken: string) {
+    token.value = newToken
+    localStorage.setItem('auth_token', newToken)
+    applyToken(newToken)
   }
 
   function clearAuth() {
@@ -78,6 +82,10 @@ export const useAuthStore = defineStore('auth', () => {
       clearAuth()
       await router.push('/login')
     }
+  }
+
+  if (token.value) {
+    applyToken(token.value)
   }
 
   return {

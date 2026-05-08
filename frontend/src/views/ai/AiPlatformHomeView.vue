@@ -2,14 +2,23 @@
   <div class="page">
     <div class="page-header">
       <div>
-        <h2>AI Platform</h2>
-        <p class="page-description">Use the AI platform hub to manage models, open assistant experiences, and track the delivery status of upcoming AI capabilities.</p>
+        <h2>{{ t('ai.platform') }}</h2>
+        <p class="page-description">{{ t('ai.platformDescription') }}</p>
       </div>
     </div>
+
+    <AiModuleCardGrid :items="cards" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import AiModuleCardGrid from '@/components/ai/AiModuleCardGrid.vue'
+import { getAiPlatformCards } from '@/api/ai-platform-contract'
+
+const { t } = useI18n()
+const cards = computed(() => getAiPlatformCards(t))
 </script>
 
 <style scoped>

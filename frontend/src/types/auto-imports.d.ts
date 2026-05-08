@@ -149,6 +149,7 @@ declare global {
   const useCollaborationEngine: typeof import('../composables/useCollaboration')['useCollaborationEngine']
   const useColorMode: typeof import('@vueuse/core')['useColorMode']
   const useConfirmDialog: typeof import('@vueuse/core')['useConfirmDialog']
+  const useConsoleStore: typeof import('../stores/console')['useConsoleStore']
   const useCopilotChat: typeof import('../composables/useCopilotChat')['useCopilotChat']
   const useCounter: typeof import('@vueuse/core')['useCounter']
   const useCssModule: typeof import('vue')['useCssModule']

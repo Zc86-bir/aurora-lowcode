@@ -7,13 +7,20 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AiCapabilityPanel: typeof import('./../components/ai/AiCapabilityPanel.vue')['default']
     AICopilotPanel: typeof import('./../components/copilot/AICopilotPanel.vue')['default']
+    AiModuleCardGrid: typeof import('./../components/ai/AiModuleCardGrid.vue')['default']
     BpmnViewer: typeof import('./../components/workflow/BpmnViewer.vue')['default']
+    ConsoleSidebar: typeof import('./../components/layout/ConsoleSidebar.vue')['default']
+    ConsoleTopbar: typeof import('./../components/layout/ConsoleTopbar.vue')['default']
     DataTable: typeof import('./../components/data/DataTable.vue')['default']
     DynamicForm: typeof import('./../components/form/DynamicForm.vue')['default']
     ErrorBoundary: typeof import('./../components/shared/ErrorBoundary.vue')['default']
     FormFieldRenderer: typeof import('./../components/form/FormFieldRenderer.vue')['default']
+    OnlineModuleCardGrid: typeof import('./../components/online/OnlineModuleCardGrid.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SystemEntityTable: typeof import('./../components/system/SystemEntityTable.vue')['default']
+    SystemModuleCardGrid: typeof import('./../components/system/SystemModuleCardGrid.vue')['default']
   }
 }

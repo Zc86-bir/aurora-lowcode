@@ -1,18 +1,18 @@
 <template>
   <div class="page">
     <div class="page-header">
-      <h2>AI Model Configuration</h2>
+      <h2>{{ t('ai.modelConfigTitle') }}</h2>
       <div class="header-actions">
-        <button class="btn btn-secondary" @click="loadData">Refresh</button>
-        <button class="btn btn-primary" @click="openCreate">+ Add Model</button>
+        <button class="btn btn-secondary" @click="loadData">{{ t('ai.modelConfigRefresh') }}</button>
+        <button class="btn btn-primary" @click="openCreate">+ {{ t('ai.modelConfigAdd') }}</button>
       </div>
     </div>
 
     <div v-if="loading" class="loading-state">Loading...</div>
     <div v-else-if="error" class="error-state">{{ error }}</div>
     <div v-else-if="configs.length === 0" class="empty-state">
-      <p>No model configurations yet.</p>
-      <button class="btn btn-primary" @click="openCreate">Add your first model</button>
+      <p>{{ t('ai.modelConfigEmpty') }}</p>
+      <button class="btn btn-primary" @click="openCreate">{{ t('ai.modelConfigAddFirst') }}</button>
     </div>
     <div v-else class="config-list">
       <div v-for="cfg in configs" :key="cfg.id" class="card config-card" :class="{ 'is-default': cfg.isDefault }">
@@ -128,8 +128,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { AiModelConfig } from '@/api/ai-contract'
 import * as api from '@/api/ai-contract'
+
+const { t } = useI18n()
 
 const configs = ref<AiModelConfig[]>([])
 const loading = ref(true)

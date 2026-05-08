@@ -1,7 +1,10 @@
 <template>
   <div class="page">
     <div class="page-header">
-      <h2>{{ t('forms.title') }}</h2>
+      <div>
+        <h2>{{ t('forms.title') }}</h2>
+        <p class="page-description">Manage online form assets, previews, and AI-assisted creation workflows.</p>
+      </div>
       <div style="display:flex;gap:0.5rem">
         <button class="btn btn-secondary btn-sm" @click="refresh">{{ t('forms.refresh') }}</button>
         <button class="btn btn-primary btn-sm" @click="openCopilot">{{ t('forms.newForm') }}</button>
@@ -60,3 +63,11 @@ const previewItem = ref<AppFormItem | null>(null)
 function openCopilot() { window.dispatchEvent(new CustomEvent('copilot:open')) }
 function previewForm(row: Record<string, unknown>) { previewItem.value = row as unknown as AppFormItem }
 </script>
+
+<style scoped>
+.page-description {
+  margin: 0.25rem 0 0;
+  color: var(--color-text-secondary, #64748b);
+  font-size: 0.95rem;
+}
+</style>

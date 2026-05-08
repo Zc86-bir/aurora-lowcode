@@ -2,6 +2,9 @@
   <div class="page">
     <div class="page-header">
       <h2>{{ t('generate.title') }}</h2>
+      <p class="page-description">
+        Generate online CRUD assets and AI-planned application scaffolds from a single code generation center.
+      </p>
     </div>
 
     <div class="tab-bar">
@@ -124,6 +127,7 @@ async function runAppGenerate() {
 </script>
 
 <style scoped>
+.page-description { max-width: 48rem; margin: 0.5rem 0 0; color: var(--color-text-secondary); font-size: var(--text-sm); line-height: 1.6; }
 .tab-bar { display: flex; margin-bottom: 1.5rem; border-bottom: 2px solid var(--color-border); }
 .tab { padding: 0.6rem 1.25rem; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: -2px; }
 .tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }

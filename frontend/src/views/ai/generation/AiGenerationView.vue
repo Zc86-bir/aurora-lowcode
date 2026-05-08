@@ -2,14 +2,23 @@
   <div class="page">
     <div class="page-header">
       <div>
-        <h2>AI Generation</h2>
-        <p class="page-description">Route AI-powered app generation through the AI platform without duplicating the existing generator implementation.</p>
+        <h2>{{ content.title }}</h2>
+        <p class="page-description">{{ content.description }}</p>
       </div>
     </div>
+
+    <AiCapabilityPanel :title="content.primaryCardTitle" :body="content.primaryCardBody" :cta-label="content.ctaLabel" :cta-to="content.ctaTo" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { getAiEntryPageContent } from '@/api/ai-platform-contract'
+import AiCapabilityPanel from '@/components/ai/AiCapabilityPanel.vue'
+
+const { t } = useI18n()
+const content = computed(() => getAiEntryPageContent(t, 'generation'))
 </script>
 
 <style scoped>

@@ -1,7 +1,10 @@
 <template>
   <div class="page">
     <div class="page-header">
-      <h2>{{ t('reports.title') }}</h2>
+      <div>
+        <h2>{{ t('reports.title') }}</h2>
+        <p class="page-description">Manage online report assets, query previews, and publishing workflows.</p>
+      </div>
       <button class="btn btn-secondary btn-sm" @click="refresh">{{ t('reports.refresh') }}</button>
     </div>
 
@@ -75,3 +78,11 @@ watch(previewItem, (val) => {
 
 function previewReport(row: Record<string, unknown>) { previewItem.value = row as unknown as AppReportItem }
 </script>
+
+<style scoped>
+.page-description {
+  margin: 0.25rem 0 0;
+  color: var(--color-text-secondary, #64748b);
+  font-size: 0.95rem;
+}
+</style>
