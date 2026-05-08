@@ -103,10 +103,10 @@ All remotes MUST share these dependencies as singletons with the host:
    - Registry entries must be reviewed before enabling in production.
 
 2. **CSP must allow trusted origins**
-   - Production `nginx.conf` must explicitly include approved remote script origins:
-   ```
-   add_header Content-Security-Policy "script-src 'self' https://trusted-cdn.example.com; object-src 'none'; base-uri 'self'" always;
-   ```
+    - Production `Caddyfile` must explicitly include approved remote script origins:
+    ```
+    Content-Security-Policy "script-src 'self' https://trusted-cdn.example.com; object-src 'none'; base-uri 'self'"
+    ```
 
 3. **Remotes must not access internal APIs directly**
    - Vector store, knowledge retrieval, and tenant data access go through host-governed capability APIs.

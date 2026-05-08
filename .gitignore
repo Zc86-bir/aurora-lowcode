@@ -41,3 +41,8 @@ dist/
 coverage/
 *.exec
 jacoco/
+
+# Local tooling artifacts
+.mybatis/
+docs/superpowers/plans/
+frontend/test-results/

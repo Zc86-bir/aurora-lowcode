@@ -46,6 +46,44 @@ const coreRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/GenerateView.vue'),
         meta: { roles: ['ADMIN'] },
       },
+      // Enterprise Console — System
+      {
+        path: 'system/users',
+        name: 'SystemUsers',
+        component: () => import('@/views/SystemUsersView.vue'),
+        meta: { roles: ['ADMIN'] },
+      },
+      {
+        path: 'system/roles',
+        name: 'SystemRoles',
+        component: () => import('@/views/SystemRolesView.vue'),
+        meta: { roles: ['ADMIN'] },
+      },
+      {
+        path: 'system/menus',
+        name: 'SystemMenus',
+        component: () => import('@/views/SystemMenusView.vue'),
+        meta: { roles: ['ADMIN'] },
+      },
+      {
+        path: 'system/buttons',
+        name: 'SystemButtons',
+        component: () => import('@/views/SystemButtonsView.vue'),
+        meta: { roles: ['ADMIN'] },
+      },
+      {
+        path: 'system/data-rules',
+        name: 'SystemDataRules',
+        component: () => import('@/views/SystemDataRulesView.vue'),
+        meta: { roles: ['ADMIN'] },
+      },
+      // Enterprise Console — AI
+      {
+        path: 'ai/models',
+        name: 'AiModelConfig',
+        component: () => import('@/views/AiModelConfigView.vue'),
+        meta: { roles: ['ADMIN'] },
+      },
     ],
   },
 ]
@@ -89,6 +127,10 @@ router.beforeEach((to) => {
   // Dev mode: auto-login with demo token
   if (import.meta.env.DEV && !authStore.isAuthenticated) {
     authStore.setToken('dev-demo-token-for-local-ui-development')
+    // Set default tenant for dev mode
+    if (typeof window !== 'undefined' && !localStorage.getItem('tenant_id')) {
+      localStorage.setItem('tenant_id', '00000000-0000-0000-0000-000000000001')
+    }
     return true
   }
 

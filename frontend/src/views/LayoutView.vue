@@ -30,6 +30,32 @@
         </router-link>
       </nav>
 
+      <nav class="nav-section">
+        <div class="nav-section-label">System</div>
+        <router-link to="/system/users" class="nav-item">
+          <span class="nav-icon">👤</span> Users
+        </router-link>
+        <router-link to="/system/roles" class="nav-item">
+          <span class="nav-icon">🛡</span> Roles
+        </router-link>
+        <router-link to="/system/menus" class="nav-item">
+          <span class="nav-icon">☰</span> Menus
+        </router-link>
+        <router-link to="/system/buttons" class="nav-item">
+          <span class="nav-icon">🔘</span> Buttons
+        </router-link>
+        <router-link to="/system/data-rules" class="nav-item">
+          <span class="nav-icon">📋</span> Data Rules
+        </router-link>
+      </nav>
+
+      <nav class="nav-section">
+        <div class="nav-section-label">AI</div>
+        <router-link to="/ai/models" class="nav-item">
+          <span class="nav-icon">🤖</span> Model Config
+        </router-link>
+      </nav>
+
       <div class="sidebar-footer">
         <div class="user-avatar">{{ (authStore.username || '?')[0]?.toUpperCase() }}</div>
         <span class="user-name">{{ authStore.username || 'Dev' }}</span>
@@ -79,6 +105,12 @@ const currentTitle = computed(() => {
     Workflows: t('nav.workflows'),
     Generate: t('nav.generate'),
     Settings: t('nav.settings'),
+    SystemUsers: 'User Management',
+    SystemRoles: 'Role Management',
+    SystemMenus: 'Menu Management',
+    SystemButtons: 'Button Permissions',
+    SystemDataRules: 'Data Permission Rules',
+    AiModelConfig: 'AI Model Configuration',
   }
   return map[name] || 'Aurora'
 })
@@ -119,6 +151,15 @@ const currentTitle = computed(() => {
   border-top: 1px solid rgba(255,255,255,0.08);
   margin-top: 0.25rem;
   padding-top: 0.75rem;
+}
+
+.nav-section-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.25rem 0.75rem 0.5rem;
 }
 
 .nav-item {

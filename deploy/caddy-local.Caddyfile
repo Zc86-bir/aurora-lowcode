@@ -1,0 +1,96 @@
+# Caddy Local Dev Configuration — Aurora LowCode
+# Binds to port 8088 (no admin rights needed on Windows)
+# Usage: caddy run --config deploy/caddy-local.Caddyfile
+{
+	http_port 8088
+	admin off
+}
+
+localhost:8088 {
+	# Security headers
+	header {
+		X-Frame-Options "SAMEORIGIN"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+
+	# Gzip compression
+	encode gzip
+
+	# Frontend static files root
+	root * html/dist
+
+	# ─── API & Backend Proxies (handle first, mutually exclusive) ───
+
+	# API proxy → backend
+	handle /api/* {
+		reverse_proxy 127.0.0.1:8080 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up Authorization {header.Authorization}
+			header_up X-Tenant-Id {header.X-Tenant-Id}
+			header_up X-User-Id {header.X-User-Id}
+			header_down Cache-Control "no-store"
+		}
+	}
+
+	# WebSocket proxy
+	handle /ws/* {
+		reverse_proxy 127.0.0.1:8080 {
+			header_up Host {host}
+			header_up Upgrade {header.Upgrade}
+			header_up Connection {header.Connection}
+		}
+	}
+
+	# MCP proxy
+	handle /mcp/* {
+		reverse_proxy 127.0.0.1:8080 {
+			header_up Host {host}
+			header_up Authorization {header.Authorization}
+		}
+	}
+
+	# Swagger UI proxy
+	handle /swagger-ui/* {
+		reverse_proxy 127.0.0.1:8080 {
+			header_up Host {host}
+		}
+	}
+
+	# OpenAPI docs proxy
+	handle /v3/api-docs* {
+		reverse_proxy 127.0.0.1:8080 {
+			header_up Host {host}
+		}
+	}
+
+	# Health check
+	handle /healthz {
+		respond "OK" 200
+	}
+
+	# ─── Frontend SPA (fallback for everything else) ───
+
+	handle {
+		# HTML entry point — no cache
+		@indexHtml path /index.html
+		header @indexHtml {
+			Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
+		}
+
+		# Vite hashed assets — immutable cache (365 days)
+		@assets path /assets/*
+		header @assets {
+			Cache-Control "public, max-age=31536000, immutable"
+		}
+
+		# SPA fallback
+		try_files {path} {path}/ /index.html
+	}
+
+	# Client body size limit
+	request_body {
+		max_size 50m
+	}
+}

@@ -56,24 +56,24 @@ public class SecurityFilterChainConfig {
             .csrf(AbstractHttpConfigurer::disable)
 
             // Authorization rules
-            .authorizeHttpRequests(auth -> auth
+            .authorizeHttpRequests(auth -> {
                 // Public endpoints — no authentication required
-                .requestMatchers("/auth/login").permitAll()
-                .requestMatchers("/auth/refresh").permitAll()
-                .requestMatchers("/actuator/health").permitAll()
-                .requestMatchers("/actuator/info").permitAll()
-                .requestMatchers("/v3/api-docs/**").permitAll()
-                .requestMatchers("/swagger-ui/**").permitAll()
-                .requestMatchers("/swagger-ui.html").permitAll()
-                // Dev-only bypass for API integration debugging
-                .requestMatchers("/api/v1/**").access((authentication, object) ->
-                        new org.springframework.security.authorization.AuthorizationDecision(
-                                devPermitApi || authentication.get().isAuthenticated()))
-                // External API — requires JWT or API key authentication
-                .requestMatchers("/api/v1/external/**").authenticated()
-                // All other requests require authentication
-                .anyRequest().authenticated()
-            )
+                auth.requestMatchers("/auth/login").permitAll()
+                    .requestMatchers("/auth/refresh").permitAll()
+                    .requestMatchers("/actuator/health").permitAll()
+                    .requestMatchers("/actuator/info").permitAll()
+                    .requestMatchers("/v3/api-docs/**").permitAll()
+                    .requestMatchers("/swagger-ui/**").permitAll()
+                    .requestMatchers("/swagger-ui.html").permitAll();
+
+                if (devPermitApi) {
+                    // Dev mode: allow all API endpoints without JWT
+                    auth.requestMatchers("/api/**").permitAll();
+                } else {
+                    // Prod: all API endpoints require authentication
+                    auth.anyRequest().authenticated();
+                }
+            })
 
             // Add JWT filter before Spring's default authentication filter
             .addFilterBefore(jwtAuthenticationFilter,

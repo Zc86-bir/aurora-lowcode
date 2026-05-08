@@ -44,32 +44,35 @@ scrape_configs:
           component: application
           __path__: /var/log/aurora/*.log
 
-  # Nginx access logs
-  - job_name: nginx-access
+  # Caddy access logs (JSON format)
+  - job_name: caddy-access
     static_configs:
       - targets:
           - localhost
         labels:
-          job: nginx
+          job: caddy
           component: access
-          __path__: /var/log/nginx/access.log
+          __path__: /var/log/caddy/access.log
     pipeline_stages:
-      - regex:
-          expression: '^(?P<remote_addr>[\w\.]+) .* "(?P<method>\w+) (?P<request_uri>\S+) .* (?P<status>\d{3}) (?P<body_bytes_sent>\d+)'
+      - json:
+          expressions:
+            request: request
+            status: status
+            duration: duration
+            remote_ip: remote_ip
       - labels:
-          method:
-          request_uri:
           status:
+          request:
 
-  # Nginx error logs
-  - job_name: nginx-error
+  # Caddy error logs
+  - job_name: caddy-error
     static_configs:
       - targets:
           - localhost
         labels:
-          job: nginx
+          job: caddy
           component: error
-          __path__: /var/log/nginx/error.log
+          __path__: /var/log/caddy/error.log
 
 # Stages to extract traceId from log lines and add as label
 # This enables Logs -> Traces correlation in Grafana

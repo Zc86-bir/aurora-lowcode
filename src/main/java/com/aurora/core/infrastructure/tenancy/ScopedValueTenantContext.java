@@ -42,12 +42,20 @@ public class ScopedValueTenantContext implements TenantContext {
 
     @Override
     public UUID getCurrentTenantId() {
-        return CURRENT_TENANT.orElse(tenantHolder.get());
+        try {
+            UUID scoped = CURRENT_TENANT.orElse(null);
+            if (scoped != null) return scoped;
+        } catch (Exception ignored) {}
+        return tenantHolder.get();
     }
 
     @Override
     public UUID getCurrentUserId() {
-        return CURRENT_USER.orElse(userHolder.get());
+        try {
+            UUID scoped = CURRENT_USER.orElse(null);
+            if (scoped != null) return scoped;
+        } catch (Exception ignored) {}
+        return userHolder.get();
     }
 
     @Override
